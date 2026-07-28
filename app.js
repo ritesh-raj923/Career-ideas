@@ -1,4 +1,4 @@
-// ─── SUPABASE CONFIGURATION ───
+
 const SUPABASE_URL = 'https://qawdfokessggqnjlfztn.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_y-fsbvqs6zvqj36t779mAVA_kCUGY_';
 

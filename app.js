@@ -17,8 +17,14 @@ let hasMore = true;
 let currentResourceId = null;
 let userVotes = {};
 
-// ─── DOM REFS ───
-const $ = (id) => document.getElementById(id);
+// ─── DOM REFS WITH SAFETY CHECKS ───
+const $ = (id) => {
+    const el = document.getElementById(id);
+    if (!el) {
+        console.warn(`⚠️ Element with id "${id}" not found`);
+    }
+    return el;
+};
 
 const elements = {
     examsGrid: $('examsGrid'),
@@ -70,7 +76,7 @@ const elements = {
     submitCommentBtn: $('submitCommentBtn'),
 };
 
-console.log('DOM elements loaded:', elements);
+console.log('DOM elements loaded');
 
 // ─── AUTH FUNCTIONS ───
 
@@ -89,15 +95,19 @@ async function checkAuth() {
 }
 
 function updateUIForLoggedInUser(user) {
-    elements.authLinks.style.display = 'none';
-    elements.userMenu.style.display = 'flex';
-    elements.userAvatar.src = user.user_metadata?.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.user_metadata?.full_name || user.email);
-    elements.userName.textContent = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+    if (elements.authLinks) elements.authLinks.style.display = 'none';
+    if (elements.userMenu) elements.userMenu.style.display = 'flex';
+    if (elements.userAvatar) {
+        elements.userAvatar.src = user.user_metadata?.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.user_metadata?.full_name || user.email);
+    }
+    if (elements.userName) {
+        elements.userName.textContent = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+    }
 }
 
 function updateUIForLoggedOutUser() {
-    elements.authLinks.style.display = 'flex';
-    elements.userMenu.style.display = 'none';
+    if (elements.authLinks) elements.authLinks.style.display = 'flex';
+    if (elements.userMenu) elements.userMenu.style.display = 'none';
     currentUser = null;
     userVotes = {};
 }
@@ -176,6 +186,12 @@ async function logoutUser() {
 
 async function loadExams() {
     console.log('Loading exams...');
+    
+    if (!elements.examsGrid) {
+        console.error('❌ examsGrid element not found!');
+        return;
+    }
+    
     const { data, error } = await supabase
         .from('exams')
         .select('*')
@@ -196,15 +212,19 @@ async function loadExams() {
         </div>
     `).join('');
     
-    elements.resourceExam.innerHTML = '<option value="">Select an exam</option>' +
-        data.map(exam => `
-            <option value="${exam.id}">${exam.name}</option>
-        `).join('');
+    if (elements.resourceExam) {
+        elements.resourceExam.innerHTML = '<option value="">Select an exam</option>' +
+            data.map(exam => `
+                <option value="${exam.id}">${exam.name}</option>
+            `).join('');
+    }
     
-    elements.examFilter.innerHTML = '<option value="">All Exams</option>' +
-        data.map(exam => `
-            <option value="${exam.id}">${exam.name}</option>
-        `).join('');
+    if (elements.examFilter) {
+        elements.examFilter.innerHTML = '<option value="">All Exams</option>' +
+            data.map(exam => `
+                <option value="${exam.id}">${exam.name}</option>
+            `).join('');
+    }
 }
 
 // ─── RESOURCES ───
@@ -212,6 +232,12 @@ async function loadExams() {
 async function loadResources(reset = true) {
     if (isLoading) return;
     isLoading = true;
+    
+    if (!elements.resourcesGrid) {
+        console.error('❌ resourcesGrid element not found!');
+        isLoading = false;
+        return;
+    }
     
     if (reset) {
         page = 0;
@@ -236,9 +262,11 @@ async function loadResources(reset = true) {
         query = query.eq('exam_id', parseInt(currentExamFilter));
     }
     
-    const searchTerm = elements.searchInput.value.trim();
-    if (searchTerm) {
-        query = query.ilike('title', `%${searchTerm}%`);
+    if (elements.searchInput) {
+        const searchTerm = elements.searchInput.value.trim();
+        if (searchTerm) {
+            query = query.ilike('title', `%${searchTerm}%`);
+        }
     }
     
     if (currentSort === 'upvotes') {
@@ -290,7 +318,9 @@ async function loadResources(reset = true) {
     hasMore = data.length === PAGE_SIZE;
     page++;
     isLoading = false;
-    elements.loadMoreBtn.style.display = hasMore ? 'inline-flex' : 'none';
+    if (elements.loadMoreBtn) {
+        elements.loadMoreBtn.style.display = hasMore ? 'inline-flex' : 'none';
+    }
     
     if (reset) {
         updateStats();
@@ -446,7 +476,9 @@ async function refreshVoteCount(resourceId) {
 
 async function openComments(resourceId) {
     currentResourceId = resourceId;
-    elements.commentModal.classList.add('active');
+    if (elements.commentModal) {
+        elements.commentModal.classList.add('active');
+    }
     await loadComments(resourceId);
 }
 
@@ -462,29 +494,35 @@ async function loadComments(resourceId) {
     
     if (error) {
         console.error('Error loading comments:', error);
-        elements.commentsContainer.innerHTML = '<p class="loading-state">Error loading comments.</p>';
+        if (elements.commentsContainer) {
+            elements.commentsContainer.innerHTML = '<p class="loading-state">Error loading comments.</p>';
+        }
         return;
     }
     
     if (data.length === 0) {
-        elements.commentsContainer.innerHTML = `
-            <div class="loading-state" style="padding:20px 0;">
-                <p>No comments yet. Be the first!</p>
-            </div>
-        `;
+        if (elements.commentsContainer) {
+            elements.commentsContainer.innerHTML = `
+                <div class="loading-state" style="padding:20px 0;">
+                    <p>No comments yet. Be the first!</p>
+                </div>
+            `;
+        }
         return;
     }
     
-    elements.commentsContainer.innerHTML = data.map(comment => `
-        <div class="comment-item">
-            <div class="comment-header">
-                <img src="${comment.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.profiles?.full_name || 'User')}`}" />
-                <span class="comment-user">${comment.profiles?.full_name || 'Anonymous'}</span>
-                <span class="comment-time">${new Date(comment.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+    if (elements.commentsContainer) {
+        elements.commentsContainer.innerHTML = data.map(comment => `
+            <div class="comment-item">
+                <div class="comment-header">
+                    <img src="${comment.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.profiles?.full_name || 'User')}`}" />
+                    <span class="comment-user">${comment.profiles?.full_name || 'Anonymous'}</span>
+                    <span class="comment-time">${new Date(comment.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                </div>
+                <div class="comment-text">${comment.content}</div>
             </div>
-            <div class="comment-text">${comment.content}</div>
-        </div>
-    `).join('');
+        `).join('');
+    }
 }
 
 async function loadCommentCount(resourceId) {
@@ -505,19 +543,25 @@ async function updateStats() {
     const { count: resourceCount } = await supabase
         .from('resources')
         .select('*', { count: 'exact', head: true });
-    elements.totalResources.textContent = resourceCount || 0;
+    if (elements.totalResources) {
+        elements.totalResources.textContent = resourceCount || 0;
+    }
     
     const { count: userCount } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
-    elements.totalUsers.textContent = userCount || 0;
+    if (elements.totalUsers) {
+        elements.totalUsers.textContent = userCount || 0;
+    }
 }
 
 // ─── FILTERS ───
 
 function filterByExam(examId) {
     currentExamFilter = examId;
-    elements.examFilter.value = examId;
+    if (elements.examFilter) {
+        elements.examFilter.value = examId;
+    }
     
     document.querySelectorAll('.exam-card').forEach(card => {
         card.classList.toggle('active', parseInt(card.dataset.examId) === examId);
@@ -529,104 +573,137 @@ function filterByExam(examId) {
 // ─── SEARCH ───
 
 let searchTimeout;
-elements.searchInput.addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => loadResources(true), 500);
-});
+if (elements.searchInput) {
+    elements.searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => loadResources(true), 500);
+    });
+}
 
 // ─── MODAL HELPERS ───
 
 function openModal(modal) {
+    if (!modal) return;
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
 function closeModal(modal) {
+    if (!modal) return;
     modal.classList.remove('active');
     document.body.style.overflow = '';
 }
 
-// ─── EVENT LISTENERS ───
+// ─── EVENT LISTENERS WITH SAFETY CHECKS ───
 
-elements.loginBtn.addEventListener('click', () => {
-    console.log('Login button clicked');
-    openModal(elements.loginModal);
-});
-
-elements.signupBtn.addEventListener('click', () => {
-    console.log('Signup button clicked');
-    openModal(elements.signupModal);
-});
-
-elements.heroAddBtn.addEventListener('click', () => {
-    console.log('Share button clicked');
-    if (!currentUser) {
+if (elements.loginBtn) {
+    elements.loginBtn.addEventListener('click', () => {
+        console.log('Login button clicked');
         openModal(elements.loginModal);
-        return;
-    }
-    openModal(elements.addResourceModal);
-});
+    });
+}
 
-elements.loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-        await loginWithEmail(elements.loginEmail.value, elements.loginPassword.value);
+if (elements.signupBtn) {
+    elements.signupBtn.addEventListener('click', () => {
+        console.log('Signup button clicked');
+        openModal(elements.signupModal);
+    });
+}
+
+if (elements.heroAddBtn) {
+    elements.heroAddBtn.addEventListener('click', () => {
+        console.log('Share button clicked');
+        if (!currentUser) {
+            openModal(elements.loginModal);
+            return;
+        }
+        openModal(elements.addResourceModal);
+    });
+}
+
+if (elements.loginForm) {
+    elements.loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            await loginWithEmail(elements.loginEmail.value, elements.loginPassword.value);
+            closeModal(elements.loginModal);
+            location.reload();
+        } catch (error) {
+            alert('Login failed: ' + error.message);
+        }
+    });
+}
+
+if (elements.signupForm) {
+    elements.signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            await signupWithEmail(
+                elements.signupEmail.value,
+                elements.signupPassword.value,
+                elements.signupName.value
+            );
+            closeModal(elements.signupModal);
+            location.reload();
+        } catch (error) {
+            alert('Signup failed: ' + error.message);
+        }
+    });
+}
+
+if (elements.googleLoginBtn) {
+    elements.googleLoginBtn.addEventListener('click', async () => {
+        try {
+            await loginWithGoogle();
+            closeModal(elements.loginModal);
+        } catch (error) {
+            alert('Google login failed: ' + error.message);
+        }
+    });
+}
+
+if (elements.googleSignupBtn) {
+    elements.googleSignupBtn.addEventListener('click', async () => {
+        try {
+            await loginWithGoogle();
+            closeModal(elements.signupModal);
+        } catch (error) {
+            alert('Google login failed: ' + error.message);
+        }
+    });
+}
+
+if (elements.switchToSignup) {
+    elements.switchToSignup.addEventListener('click', (e) => {
+        e.preventDefault();
         closeModal(elements.loginModal);
-        location.reload();
-    } catch (error) {
-        alert('Login failed: ' + error.message);
-    }
-});
+        openModal(elements.signupModal);
+    });
+}
 
-elements.signupForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-        await signupWithEmail(
-            elements.signupEmail.value,
-            elements.signupPassword.value,
-            elements.signupName.value
-        );
+if (elements.switchToLogin) {
+    elements.switchToLogin.addEventListener('click', (e) => {
+        e.preventDefault();
         closeModal(elements.signupModal);
-        location.reload();
-    } catch (error) {
-        alert('Signup failed: ' + error.message);
-    }
-});
+        openModal(elements.loginModal);
+    });
+}
 
-elements.googleLoginBtn.addEventListener('click', async () => {
-    try {
-        await loginWithGoogle();
-        closeModal(elements.loginModal);
-    } catch (error) {
-        alert('Google login failed: ' + error.message);
-    }
-});
+if (elements.closeLoginModal) {
+    elements.closeLoginModal.addEventListener('click', () => closeModal(elements.loginModal));
+}
 
-elements.googleSignupBtn.addEventListener('click', async () => {
-    try {
-        await loginWithGoogle();
-        closeModal(elements.signupModal);
-    } catch (error) {
-        alert('Google login failed: ' + error.message);
-    }
-});
+if (elements.closeSignupModal) {
+    elements.closeSignupModal.addEventListener('click', () => closeModal(elements.signupModal));
+}
 
-elements.switchToSignup.addEventListener('click', (e) => {
-    e.preventDefault();
-    closeModal(elements.loginModal);
-    openModal(elements.signupModal);
-});
+if (elements.closeModal) {
+    elements.closeModal.addEventListener('click', () => closeModal(elements.addResourceModal));
+}
 
-elements.switchToLogin.addEventListener('click', (e) => {
-    e.preventDefault();
-    closeModal(elements.signupModal);
-    openModal(elements.loginModal);
-});
-
-elements.closeLoginModal.addEventListener('click', () => closeModal(elements.loginModal));
-elements.closeSignupModal.addEventListener('click', () => closeModal(elements.signupModal));
-elements.closeModal.addEventListener('click', () => closeModal(elements.addResourceModal));
-elements.closeCommentModal.addEventListener('click', () => closeModal(elements.commentModal));
+if (elements.closeCommentModal) {
+    elements.closeCommentModal.addEventListener('click', () => closeModal(elements.commentModal));
+}
 
 window.addEventListener('click', (e) => {
     if (e.target.classList.contains('modal')) {
@@ -634,117 +711,133 @@ window.addEventListener('click', (e) => {
     }
 });
 
-elements.logoutBtn.addEventListener('click', logoutUser);
+if (elements.logoutBtn) {
+    elements.logoutBtn.addEventListener('click', logoutUser);
+}
 
-elements.resourceForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    if (!currentUser) {
-        alert('Please login first.');
-        return;
-    }
-    
-    const title = elements.resourceTitle.value.trim();
-    const examId = parseInt(elements.resourceExam.value);
-    const link = elements.resourceLink.value.trim();
-    const description = elements.resourceDesc.value.trim();
-    
-    if (!title || !examId || !link) {
-        alert('Please fill in all required fields.');
-        return;
-    }
-    
-    elements.submitResourceBtn.disabled = true;
-    elements.submitResourceBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-    
-    const { data, error } = await supabase
-        .from('resources')
-        .insert({
-            title,
-            exam_id: examId,
-            link,
-            description,
-            user_id: currentUser.id
-        });
-    
-    elements.submitResourceBtn.disabled = false;
-    elements.submitResourceBtn.innerHTML = '<i class="fas fa-upload"></i> Share Resource';
-    
-    if (error) {
-        alert('Error sharing resource: ' + error.message);
-        return;
-    }
-    
-    alert('Resource shared successfully! 🎉');
-    closeModal(elements.addResourceModal);
-    elements.resourceForm.reset();
-    loadResources(true);
-});
+if (elements.resourceForm) {
+    elements.resourceForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (!currentUser) {
+            alert('Please login first.');
+            return;
+        }
+        
+        const title = elements.resourceTitle.value.trim();
+        const examId = parseInt(elements.resourceExam.value);
+        const link = elements.resourceLink.value.trim();
+        const description = elements.resourceDesc.value.trim();
+        
+        if (!title || !examId || !link) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+        
+        elements.submitResourceBtn.disabled = true;
+        elements.submitResourceBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        
+        const { data, error } = await supabase
+            .from('resources')
+            .insert({
+                title,
+                exam_id: examId,
+                link,
+                description,
+                user_id: currentUser.id
+            });
+        
+        elements.submitResourceBtn.disabled = false;
+        elements.submitResourceBtn.innerHTML = '<i class="fas fa-upload"></i> Share Resource';
+        
+        if (error) {
+            alert('Error sharing resource: ' + error.message);
+            return;
+        }
+        
+        alert('Resource shared successfully! 🎉');
+        closeModal(elements.addResourceModal);
+        elements.resourceForm.reset();
+        loadResources(true);
+    });
+}
 
-elements.commentForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    if (!currentUser) {
-        alert('Please login to comment.');
-        return;
-    }
-    
-    const content = elements.commentInput.value.trim();
-    if (!content) return;
-    
-    elements.submitCommentBtn.disabled = true;
-    elements.submitCommentBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
-    
-    const { error } = await supabase
-        .from('comments')
-        .insert({
-            resource_id: currentResourceId,
-            user_id: currentUser.id,
-            content
-        });
-    
-    elements.submitCommentBtn.disabled = false;
-    elements.submitCommentBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Post Comment';
-    
-    if (error) {
-        alert('Error posting comment: ' + error.message);
-        return;
-    }
-    
-    elements.commentInput.value = '';
-    await loadComments(currentResourceId);
-    loadCommentCount(currentResourceId);
-});
+if (elements.commentForm) {
+    elements.commentForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (!currentUser) {
+            alert('Please login to comment.');
+            return;
+        }
+        
+        const content = elements.commentInput.value.trim();
+        if (!content) return;
+        
+        elements.submitCommentBtn.disabled = true;
+        elements.submitCommentBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+        
+        const { error } = await supabase
+            .from('comments')
+            .insert({
+                resource_id: currentResourceId,
+                user_id: currentUser.id,
+                content
+            });
+        
+        elements.submitCommentBtn.disabled = false;
+        elements.submitCommentBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Post Comment';
+        
+        if (error) {
+            alert('Error posting comment: ' + error.message);
+            return;
+        }
+        
+        elements.commentInput.value = '';
+        await loadComments(currentResourceId);
+        loadCommentCount(currentResourceId);
+    });
+}
 
-elements.examFilter.addEventListener('change', () => {
-    currentExamFilter = elements.examFilter.value;
-    loadResources(true);
-});
+if (elements.examFilter) {
+    elements.examFilter.addEventListener('change', () => {
+        currentExamFilter = elements.examFilter.value;
+        loadResources(true);
+    });
+}
 
-elements.sortFilter.addEventListener('change', () => {
-    currentSort = elements.sortFilter.value;
-    loadResources(true);
-});
+if (elements.sortFilter) {
+    elements.sortFilter.addEventListener('change', () => {
+        currentSort = elements.sortFilter.value;
+        loadResources(true);
+    });
+}
 
-elements.loadMoreBtn.addEventListener('click', () => loadResources(false));
+if (elements.loadMoreBtn) {
+    elements.loadMoreBtn.addEventListener('click', () => loadResources(false));
+}
 
-elements.profileLink.addEventListener('click', () => {
-    alert('Profile feature coming soon!');
-});
+if (elements.profileLink) {
+    elements.profileLink.addEventListener('click', () => {
+        alert('Profile feature coming soon!');
+    });
+}
 
-elements.myResourcesLink.addEventListener('click', () => {
-    alert('My Resources feature coming soon!');
-});
+if (elements.myResourcesLink) {
+    elements.myResourcesLink.addEventListener('click', () => {
+        alert('My Resources feature coming soon!');
+    });
+}
 
 // ─── HAMBURGER MENU ───
 
-document.getElementById('hamburger').addEventListener('click', () => {
-    document.getElementById('navLinks').classList.toggle('open');
+document.getElementById('hamburger')?.addEventListener('click', () => {
+    document.getElementById('navLinks')?.classList.toggle('open');
 });
 
 document.querySelectorAll('.nav-links a').forEach(link => {
     link.addEventListener('click', () => {
-        document.getElementById('navLinks').classList.remove('open');
+        document.getElementById('navLinks')?.classList.remove('open');
     });
 });
 
@@ -752,8 +845,8 @@ document.querySelectorAll('.nav-links a').forEach(link => {
 
 window.addEventListener('scroll', () => {
     const nav = document.getElementById('navbar');
-    if (window.scrollY > 40) nav.classList.add('scrolled');
-    else nav.classList.remove('scrolled');
+    if (window.scrollY > 40) nav?.classList.add('scrolled');
+    else nav?.classList.remove('scrolled');
 });
 
 // ─── AUTH STATE LISTENER ───

@@ -619,7 +619,88 @@ nav.scrolled {
     color: var(--text-muted);
     margin-top: 2px;
 }
+/* ─── SECTOR FILTERS (LARGE & TOUCH-FRIENDLY) ─── */
+.exam-sector-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 20px 0 30px 0;
+    padding: 4px 0;
+}
 
+.sector-filter-btn {
+    background: var(--bg-card);
+    border: 1.5px solid rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    padding: 12px 28px;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: inherit;
+    white-space: nowrap;
+    min-height: 54px;
+    min-width: 100px;
+    letter-spacing: 0.3px;
+}
+
+.sector-filter-btn:hover {
+    background: var(--gold-dim);
+    border-color: var(--border-gold);
+    color: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(245, 197, 66, 0.1);
+}
+
+.sector-filter-btn.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #0b0e1a;
+    font-weight: 700;
+    box-shadow: 0 4px 25px rgba(245, 197, 66, 0.35);
+    transform: translateY(-2px);
+}
+
+/* ─── RESPONSIVE: SECTOR FILTERS ON MOBILE ─── */
+@media (max-width: 768px) {
+    .exam-sector-filters {
+        gap: 8px;
+        justify-content: center;
+    }
+    
+    .sector-filter-btn {
+        padding: 8px 14px;
+        font-size: 0.8rem;
+        min-height: 40px;
+        min-width: 60px;
+        flex: 0 1 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .exam-sector-filters {
+        gap: 6px;
+        justify-content: flex-start;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 8px;
+        scrollbar-width: none; /* Hide scrollbar in Firefox */
+    }
+    
+    .exam-sector-filters::-webkit-scrollbar {
+        display: none; /* Hide scrollbar in Chrome/Safari */
+    }
+    
+    .sector-filter-btn {
+        padding: 6px 14px;
+        font-size: 0.75rem;
+        min-height: 36px;
+        min-width: 50px;
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+}
 
 /* ─────────────── RESOURCES SECTION ─────────────── */
 .resources-section {
@@ -1127,6 +1208,9 @@ footer {
     color: var(--text-primary);
 }
 @media (max-width: 480px) {
+    .exam-sector-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
     .exams-grid {
         grid-template-columns: repeat(2, 1fr);
     }

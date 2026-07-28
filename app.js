@@ -369,21 +369,75 @@ async function loadExams() {
     const { data, error } = await supabaseClient
         .from('exams')
         .select('*')
-        .order('name');
+        .order('sector', { ascending: true })
+        .order('name', { ascending: true });
     
     if (error) {
         console.error('Error loading exams:', error);
         return;
     }
     
-    elements.examsGrid.innerHTML = data.map(exam => `
-        <div class="exam-card" data-exam-id="${exam.id}" onclick="filterByExam(${exam.id})">
-            <span class="exam-icon">${exam.icon || '📚'}</span>
-            <div class="exam-name">${exam.name}</div>
-            <div class="exam-category">${exam.category}</div>
-        </div>
-    `).join('');
+    // Group exams by sector
+    const grouped = data.reduce((acc, exam) => {
+        const sector = exam.sector || 'Other';
+        if (!acc[sector]) acc[sector] = [];
+        acc[sector].push(exam);
+        return acc;
+    }, {});
     
+    // Define sector order for display
+    const sectorOrder = [
+        'Foundation', 
+        'Engineering', 
+        'Medical', 
+        'Government Jobs', 
+        'Management', 
+        'Law', 
+        'Design', 
+        'Other'
+    ];
+    
+    let html = '';
+    sectorOrder.forEach(sector => {
+        const exams = grouped[sector];
+        if (!exams || exams.length === 0) return;
+        
+        // Sector header
+        const sectorIcons = {
+            'Foundation': '🏫',
+            'Engineering': '🔬',
+            'Medical': '🩺',
+            'Government Jobs': '🏛️',
+            'Management': '💼',
+            'Law': '⚖️',
+            'Design': '🎨',
+            'Other': '📚'
+        };
+        const icon = sectorIcons[sector] || '📚';
+        
+        html += `
+            <div class="exam-sector">
+                <div class="exam-sector-header">
+                    <span class="exam-sector-icon">${icon}</span>
+                    <h3 class="exam-sector-title">${sector}</h3>
+                    <span class="exam-sector-count">${exams.length} exams</span>
+                </div>
+                <div class="exam-sector-grid">
+                    ${exams.map(exam => `
+                        <div class="exam-card" data-exam-id="${exam.id}" onclick="filterByExam(${exam.id})">
+                            <span class="exam-icon">${exam.icon || '📚'}</span>
+                            <div class="exam-name">${exam.name}</div>
+                            <div class="exam-category">${exam.category || exam.level || ''}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    });
+    
+    elements.examsGrid.innerHTML = html;
+    
+    // Populate dropdowns (keep existing logic)
     if (elements.resourceExam) {
         elements.resourceExam.innerHTML = '<option value="">Select an exam</option>' +
             data.map(exam => `

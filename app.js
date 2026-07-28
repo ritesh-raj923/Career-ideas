@@ -5,6 +5,199 @@ const SUPABASE_ANON_KEY = 'sb_publishable_y-fsbvqs6zvQj36T79mAVA_kCUGYr4m';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 console.log('✅ app.js loaded successfully');
+// ─── MULTI-LANGUAGE SUPPORT ───
+let currentLang = localStorage.getItem('lang') || 'en';
+
+const translations = {
+    en: {
+        // Nav
+        appName: 'ExamHub',
+        navExams: 'Exams',
+        navResources: 'Resources',
+        login: 'Login',
+        signup: 'Sign Up',
+        logout: 'Logout',
+        profile: 'Profile',
+        myResources: 'My Resources',
+        searchPlaceholder: 'Search resources by title or exam...',
+        
+        // Hero
+        heroBadge: "India's Largest Community Platform",
+        heroTitle: 'Find <span class="gold">Exam Resources</span><br />Shared by <span class="gold">Toppers</span>',
+        heroDesc: 'Join thousands of students sharing the best video lectures, notes, and preparation strategies for JEE, NEET, UPSC, SSC, Railways, and more. Learn from those who\'ve succeeded.',
+        browseBtn: '📖 Browse Resources',
+        shareBtn: '✨ Share Resources',
+        statsResources: 'Resources Shared',
+        statsUsers: 'Active Users',
+        statsExams: 'Exams Covered',
+
+        // Sections
+        examsLabel: '📋 Categories',
+        examsTitle: 'Browse by <span class="highlight">Exam</span>',
+        examsDesc: 'Select an exam to see all resources shared by the community.',
+        resourcesLabel: '📖 Community Resources',
+        resourcesTitle: 'Latest <span class="highlight">Study Materials</span>',
+        filterAll: 'All Exams',
+        sortUpvotes: 'Most Upvoted',
+        sortNewest: 'Newest First',
+        sortOldest: 'Oldest First',
+        loadMore: 'Load More',
+        noResources: 'No resources found. Be the first to share!',
+        loadingResources: 'Loading resources...',
+
+        // Modals
+        shareTitle: '✨ Share a Resource',
+        shareDesc: 'Help fellow students by sharing useful study materials.',
+        formTitle: 'Title *',
+        formExam: 'Exam *',
+        formLink: 'Resource Link *',
+        formDesc: 'Description',
+        formPlaceholderTitle: 'e.g., Best YouTube Playlist for JEE Physics',
+        formPlaceholderLink: 'https://youtube.com/playlist?list=...',
+        formPlaceholderDesc: "What's special about this resource? Any tips?",
+        submitBtn: 'Share Resource',
+        
+        loginTitle: 'Welcome Back',
+        loginDesc: 'Login to access all features.',
+        loginEmail: 'Email',
+        loginPassword: 'Password',
+        loginBtnText: 'Login',
+        googleBtn: 'Continue with Google',
+        noAccount: "Don't have an account?",
+        signupLink: 'Sign Up',
+
+        signupTitle: 'Create Account',
+        signupDesc: 'Join the community of learners.',
+        signupName: 'Full Name',
+        signupEmail: 'Email',
+        signupPassword: 'Password (min 6 chars)',
+        signupBtnText: 'Sign Up',
+        haveAccount: 'Already have an account?',
+        loginLink: 'Login',
+
+        commentTitle: '💬 Comments',
+        commentPlaceholder: 'Share your thoughts or ask a question...',
+        commentPost: 'Post Comment',
+        noComments: 'No comments yet. Be the first!',
+
+        // Dynamic Card Labels
+        openResource: 'Open Resource',
+        noDesc: 'No description provided.',
+        uploadedBy: 'Anonymous'
+    },
+    hi: {
+        // Nav
+        appName: 'एग्जामहब',
+        navExams: 'परीक्षाएं',
+        navResources: 'संसाधन',
+        login: 'लॉगिन',
+        signup: 'साइन अप',
+        logout: 'लॉग आउट',
+        profile: 'प्रोफ़ाइल',
+        myResources: 'मेरे संसाधन',
+        searchPlaceholder: 'शीर्षक या परीक्षा से खोजें...',
+        
+        // Hero
+        heroBadge: 'भारत का सबसे बड़ा कम्युनिटी प्लेटफॉर्म',
+        heroTitle: 'टॉपर्स द्वारा साझा किए गए <span class="gold">परीक्षा संसाधन</span> खोजें',
+        heroDesc: 'JEE, NEET, UPSC, SSC, रेलवे और अन्य परीक्षाओं के लिए सर्वश्रेष्ठ वीडियो लेक्चर, नोट्स और तैयारी रणनीतियाँ साझा करने वाले हजारों छात्रों से जुड़ें।',
+        browseBtn: '📖 संसाधन ब्राउज़ करें',
+        shareBtn: '✨ संसाधन साझा करें',
+        statsResources: 'साझा संसाधन',
+        statsUsers: 'सक्रिय उपयोगकर्ता',
+        statsExams: 'परीक्षाएं कवर',
+
+        // Sections
+        examsLabel: '📋 श्रेणियाँ',
+        examsTitle: '<span class="highlight">परीक्षा</span> के अनुसार ब्राउज़ करें',
+        examsDesc: 'समुदाय द्वारा साझा किए गए सभी संसाधनों को देखने के लिए एक परीक्षा चुनें।',
+        resourcesLabel: '📖 सामुदायिक संसाधन',
+        resourcesTitle: 'नवीनतम <span class="highlight">अध्ययन सामग्री</span>',
+        filterAll: 'सभी परीक्षाएं',
+        sortUpvotes: 'सबसे अधिक वोट',
+        sortNewest: 'नवीनतम पहले',
+        sortOldest: 'पुराना पहले',
+        loadMore: 'और लोड करें',
+        noResources: 'कोई संसाधन नहीं मिला। साझा करने वाले पहले व्यक्ति बनें!',
+        loadingResources: 'संसाधन लोड हो रहे हैं...',
+
+        // Modals
+        shareTitle: '✨ एक संसाधन साझा करें',
+        shareDesc: 'उपयोगी अध्ययन सामग्री साझा करके साथी छात्रों की मदद करें।',
+        formTitle: 'शीर्षक *',
+        formExam: 'परीक्षा *',
+        formLink: 'संसाधन लिंक *',
+        formDesc: 'विवरण',
+        formPlaceholderTitle: 'जैसे, JEE फिजिक्स के लिए सर्वश्रेष्ठ YouTube प्लेलिस्ट',
+        formPlaceholderLink: 'https://youtube.com/playlist?list=...',
+        formPlaceholderDesc: 'इस संसाधन में विशेष क्या है? कोई टिप्स?',
+        submitBtn: 'संसाधन साझा करें',
+        
+        loginTitle: 'वापसी पर स्वागत है',
+        loginDesc: 'सभी सुविधाओं तक पहुंचने के लिए लॉगिन करें।',
+        loginEmail: 'ईमेल',
+        loginPassword: 'पासवर्ड',
+        loginBtnText: 'लॉगिन',
+        googleBtn: 'Google के साथ जारी रखें',
+        noAccount: 'खाता नहीं है?',
+        signupLink: 'साइन अप करें',
+
+        signupTitle: 'खाता बनाएं',
+        signupDesc: 'शिक्षार्थियों के समुदाय में शामिल हों।',
+        signupName: 'पूरा नाम',
+        signupEmail: 'ईमेल',
+        signupPassword: 'पासवर्ड (न्यूनतम 6 अक्षर)',
+        signupBtnText: 'साइन अप',
+        haveAccount: 'पहले से खाता है?',
+        loginLink: 'लॉगिन',
+
+        commentTitle: '💬 टिप्पणियाँ',
+        commentPlaceholder: 'अपने विचार साझा करें या कोई प्रश्न पूछें...',
+        commentPost: 'टिप्पणी पोस्ट करें',
+        noComments: 'अभी कोई टिप्पणी नहीं। पहले बनें!',
+
+        // Dynamic Card Labels
+        openResource: 'संसाधन खोलें',
+        noDesc: 'कोई विवरण नहीं दिया गया।',
+        uploadedBy: 'अज्ञात'
+    }
+};
+// ─── TRANSLATION HELPERS ───
+function t(key) {
+    return translations[currentLang]?.[key] || translations.en[key] || key;
+}
+
+function setLanguage(lang) {
+    if (!translations[lang]) return;
+    currentLang = lang;
+    localStorage.setItem('lang', lang);
+    applyTranslations();
+}
+
+function applyTranslations() {
+    // Update all elements with data-i18n attribute
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const translation = t(key);
+        if (translation) {
+            // If it contains HTML (like <span>), set innerHTML; else textContent
+            if (translation.includes('<')) {
+                el.innerHTML = translation;
+            } else {
+                el.textContent = translation;
+            }
+        }
+    });
+
+    // Update placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        el.placeholder = t(key);
+    });
+
+    // Update the HTML lang attribute
+    document.documentElement.lang = currentLang;
+}
 
 // ─── STATE ───
 let currentUser = null;
@@ -221,11 +414,11 @@ async function loadResources(reset = true) {
         page = 0;
         hasMore = true;
         elements.resourcesGrid.innerHTML = `
-            <div class="loading-state">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>Loading resources...</p>
-            </div>
-        `;
+    <div class="loading-state">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>${t('loadingResources')}</p>
+    </div>
+`;
     }
     
     let query = supabaseClient
@@ -278,11 +471,11 @@ async function loadResources(reset = true) {
     
     if (data.length === 0 && page === 0) {
         elements.resourcesGrid.innerHTML = `
-            <div class="loading-state">
-                <span style="font-size:3rem;display:block;">📭</span>
-                <p>No resources found. Be the first to share!</p>
-            </div>
-        `;
+    <div class="loading-state">
+        <span style="font-size:3rem;display:block;">📭</span>
+        <p>${t('noResources')}</p>
+    </div>
+`;
         hasMore = false;
         isLoading = false;
         return;
@@ -311,7 +504,7 @@ function createResourceCard(resource) {
     
     const examName = resource.exams?.name || 'Unknown';
     const examIcon = resource.exams?.icon || '📚';
-    const userName = resource.profiles?.full_name || 'Anonymous';
+    const userName = resource.profiles?.full_name || t('uploadedBy');
     const avatarUrl = resource.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}`;
     const createdAt = new Date(resource.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     
@@ -324,10 +517,10 @@ function createResourceCard(resource) {
             <span class="resource-date">${createdAt}</span>
         </div>
         <h4>${resource.title}</h4>
-        <div class="resource-description">${resource.description || 'No description provided.'}</div>
-        <a href="${resource.link}" target="_blank" class="resource-link">
-            <i class="fas fa-external-link-alt"></i> Open Resource
-        </a>
+        <div class="resource-description">${resource.description || t('noDesc')}</div>
+<a href="${resource.link}" target="_blank" class="resource-link">
+    <i class="fas fa-external-link-alt"></i> ${t('openResource')}
+</a>
         <div class="resource-footer">
             <div class="vote-buttons">
                 <button onclick="voteResource(${resource.id}, 1)" class="${upvoted ? 'voted-up' : ''}">
@@ -836,6 +1029,16 @@ async function init() {
     await checkAuth();
     await loadExams();
     await loadResources(true);
+     applyTranslations(); // ⬅️ ADD THIS LINE
 }
-
+// ─── LANGUAGE SWITCHER ───
+const langSwitcher = document.getElementById('langSwitcher');
+if (langSwitcher) {
+    langSwitcher.value = currentLang;
+    langSwitcher.addEventListener('change', (e) => {
+        setLanguage(e.target.value);
+        // Reload resources to refresh the card text (like "Open Resource")
+        loadResources(true);
+    });
+}
 init();

@@ -1,5 +1,4 @@
 // ─── SUPABASE CONFIGURATION ───
-// REPLACE WITH YOUR VALUES FROM SUPABASE DASHBOARD
 const SUPABASE_URL = 'https://qawdfokessggqnjlfztn.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_y-fsbvqs6zvqj36t779mAVA_kCUGY_';
 
@@ -14,7 +13,7 @@ const PAGE_SIZE = 12;
 let isLoading = false;
 let hasMore = true;
 let currentResourceId = null;
-let userVotes = {}; // Stores user's votes for UI highlight
+let userVotes = {};
 
 // ─── DOM REFS ───
 const $ = (id) => document.getElementById(id);
@@ -28,8 +27,6 @@ const elements = {
     totalResources: $('totalResources'),
     totalUsers: $('totalUsers'),
     loadMoreBtn: $('loadMoreBtn'),
-    
-    // Auth
     authLinks: $('authLinks'),
     userMenu: $('userMenu'),
     userAvatar: $('userAvatar'),
@@ -40,8 +37,6 @@ const elements = {
     profileLink: $('profileLink'),
     myResourcesLink: $('myResourcesLink'),
     heroAddBtn: $('heroAddBtn'),
-    
-    // Login Modal
     loginModal: $('loginModal'),
     loginForm: $('loginForm'),
     loginEmail: $('loginEmail'),
@@ -49,8 +44,6 @@ const elements = {
     closeLoginModal: $('closeLoginModal'),
     switchToSignup: $('switchToSignup'),
     googleLoginBtn: $('googleLoginBtn'),
-    
-    // Signup Modal
     signupModal: $('signupModal'),
     signupForm: $('signupForm'),
     signupName: $('signupName'),
@@ -59,8 +52,6 @@ const elements = {
     closeSignupModal: $('closeSignupModal'),
     switchToLogin: $('switchToLogin'),
     googleSignupBtn: $('googleSignupBtn'),
-    
-    // Resource Modal
     addResourceModal: $('addResourceModal'),
     resourceForm: $('resourceForm'),
     resourceTitle: $('resourceTitle'),
@@ -69,8 +60,6 @@ const elements = {
     resourceDesc: $('resourceDesc'),
     closeModal: $('closeModal'),
     submitResourceBtn: $('submitResourceBtn'),
-    
-    // Comment Modal
     commentModal: $('commentModal'),
     commentsContainer: $('commentsContainer'),
     commentForm: $('commentForm'),
@@ -87,7 +76,7 @@ async function checkAuth() {
         currentUser = user;
         updateUIForLoggedInUser(user);
         await ensureProfile(user);
-        await loadUserVotes(); // Load user's votes for UI highlight
+        await loadUserVotes();
     }
 }
 
@@ -102,7 +91,7 @@ function updateUIForLoggedOutUser() {
     elements.authLinks.style.display = 'flex';
     elements.userMenu.style.display = 'none';
     currentUser = null;
-    userVotes = {}; // Clear votes on logout
+    userVotes = {};
 }
 
 async function ensureProfile(user) {
@@ -122,8 +111,6 @@ async function ensureProfile(user) {
     }
 }
 
-// ─── LOAD USER VOTES ───
-
 async function loadUserVotes() {
     if (!currentUser) return;
     
@@ -141,8 +128,6 @@ async function loadUserVotes() {
         userVotes[`${vote.resource_id}-${vote.vote_type}`] = true;
     });
 }
-
-// ─── AUTH: Login ───
 
 async function loginWithEmail(email, password) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -309,7 +294,6 @@ function createResourceCard(resource) {
     const avatarUrl = resource.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}`;
     const createdAt = new Date(resource.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     
-    // Check if user has voted on this resource
     const upvoted = hasUserVoted(resource.id, 1);
     const downvoted = hasUserVoted(resource.id, -1);
     
@@ -365,7 +349,6 @@ async function voteResource(resourceId, voteType) {
     const existingUp = hasUserVoted(resourceId, 1);
     const existingDown = hasUserVoted(resourceId, -1);
     
-    // If user already voted with same vote type, remove it (toggle off)
     if ((voteType === 1 && existingUp) || (voteType === -1 && existingDown)) {
         const { error: deleteError } = await supabase
             .from('votes')
@@ -378,14 +361,12 @@ async function voteResource(resourceId, voteType) {
             return;
         }
         
-        // Remove from userVotes
         delete userVotes[`${resourceId}-${voteType}`];
         refreshVoteCount(resourceId);
         updateResourceCardVoteStatus(resourceId);
         return;
     }
     
-    // If user already voted the opposite way, remove the opposite vote first
     if ((voteType === 1 && existingDown) || (voteType === -1 && existingUp)) {
         const oppositeVoteType = voteType === 1 ? -1 : 1;
         const { error: deleteError } = await supabase
@@ -399,11 +380,9 @@ async function voteResource(resourceId, voteType) {
             return;
         }
         
-        // Remove opposite vote from userVotes
         delete userVotes[`${resourceId}-${oppositeVoteType}`];
     }
     
-    // Insert new vote
     const { error: insertError } = await supabase
         .from('votes')
         .insert({
@@ -418,19 +397,12 @@ async function voteResource(resourceId, voteType) {
         return;
     }
     
-    // Add to userVotes
     userVotes[`${resourceId}-${voteType}`] = true;
     refreshVoteCount(resourceId);
     updateResourceCardVoteStatus(resourceId);
 }
 
 function updateResourceCardVoteStatus(resourceId) {
-    const card = document.querySelector(`.resource-card`);
-    if (!card) return;
-    
-    // Since we can't easily find the specific card, we'll reload the resources
-    // A better approach would be to find the specific card, but this is simpler
-    // and works for now
     const upBtn = document.querySelector(`button[onclick="voteResource(${resourceId}, 1)"]`);
     const downBtn = document.querySelector(`button[onclick="voteResource(${resourceId}, -1)"]`);
     

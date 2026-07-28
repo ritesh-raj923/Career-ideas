@@ -546,50 +546,80 @@ nav.scrolled {
         transform: translateY(-8px);
     }
 }
-
-/* ─────────────── EXAMS SECTION ─────────────── */
-.exams-section {
-    background: var(--bg-secondary);
+/* ─── GROUPED EXAMS ─── */
+.exam-sector {
+    margin-bottom: 32px;
 }
 
-.exams-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 20px;
-    margin-top: 40px;
+.exam-sector-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.04);
 }
 
-.exam-card {
+.exam-sector-icon {
+    font-size: 1.6rem;
+}
+
+.exam-sector-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.exam-sector-count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
     background: var(--bg-card);
-    padding: 20px 16px;
+    padding: 2px 12px;
+    border-radius: 100px;
+    margin-left: auto;
+}
+
+.exam-sector-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+}
+
+.exam-sector-grid .exam-card {
+    background: var(--bg-card);
+    padding: 16px 12px;
     border-radius: var(--radius-sm);
     border: 1px solid rgba(255, 255, 255, 0.04);
     text-align: center;
     transition: var(--transition);
     cursor: pointer;
 }
-.exam-card:hover {
+
+.exam-sector-grid .exam-card:hover {
     transform: translateY(-4px);
     border-color: var(--border-gold);
     background: var(--bg-card-hover);
 }
-.exam-card .exam-icon {
-    font-size: 2rem;
+
+.exam-sector-grid .exam-card .exam-icon {
+    font-size: 1.8rem;
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
-.exam-card .exam-name {
-    font-size: 0.9rem;
+
+.exam-sector-grid .exam-card .exam-name {
+    font-size: 0.8rem;
     font-weight: 600;
+    line-height: 1.2;
 }
-.exam-card .exam-category {
-    font-size: 0.7rem;
+
+.exam-sector-grid .exam-card .exam-category {
+    font-size: 0.65rem;
     color: var(--text-muted);
+    margin-top: 2px;
 }
-.exam-card.active {
-    border-color: var(--gold);
-    background: var(--gold-dim);
-}
+
 
 /* ─────────────── RESOURCES SECTION ─────────────── */
 .resources-section {

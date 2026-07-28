@@ -2,7 +2,7 @@
 const SUPABASE_URL = 'https://qadfokessggpnjfztn.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_pubLISHable_y-fsbvg6zvgj36779mAVALKUGY';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 console.log('✅ app.js loaded successfully');
 
@@ -17,14 +17,8 @@ let hasMore = true;
 let currentResourceId = null;
 let userVotes = {};
 
-// ─── DOM REFS WITH SAFETY CHECKS ───
-const $ = (id) => {
-    const el = document.getElementById(id);
-    if (!el) {
-        console.warn(`⚠️ Element with id "${id}" not found`);
-    }
-    return el;
-};
+// ─── DOM REFS ───
+const $ = (id) => document.getElementById(id);
 
 const elements = {
     examsGrid: $('examsGrid'),
@@ -76,21 +70,15 @@ const elements = {
     submitCommentBtn: $('submitCommentBtn'),
 };
 
-console.log('DOM elements loaded');
-
 // ─── AUTH FUNCTIONS ───
 
 async function checkAuth() {
-    console.log('Checking auth...');
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabaseClient.auth.getUser();
     if (user) {
         currentUser = user;
         updateUIForLoggedInUser(user);
         await ensureProfile(user);
         await loadUserVotes();
-        console.log('User logged in:', user.email);
-    } else {
-        console.log('No user logged in');
     }
 }
 
@@ -113,27 +101,26 @@ function updateUIForLoggedOutUser() {
 }
 
 async function ensureProfile(user) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
     
     if (error && error.code === 'PGRST116') {
-        await supabase.from('profiles').insert({
+        await supabaseClient.from('profiles').insert({
             id: user.id,
             full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
             avatar_url: user.user_metadata?.avatar_url || null,
             username: user.email?.split('@')[0] + Math.floor(Math.random() * 1000)
         });
-        console.log('Profile created for user:', user.email);
     }
 }
 
 async function loadUserVotes() {
     if (!currentUser) return;
     
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('votes')
         .select('resource_id, vote_type')
         .eq('user_id', currentUser.id);
@@ -146,17 +133,16 @@ async function loadUserVotes() {
     data.forEach(vote => {
         userVotes[`${vote.resource_id}-${vote.vote_type}`] = true;
     });
-    console.log('User votes loaded:', Object.keys(userVotes).length);
 }
 
 async function loginWithEmail(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) throw error;
     return data;
 }
 
 async function loginWithGoogle() {
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: window.location.origin }
     });
@@ -165,7 +151,7 @@ async function loginWithGoogle() {
 }
 
 async function signupWithEmail(email, password, fullName) {
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabaseClient.auth.signUp({
         email,
         password,
         options: {
@@ -177,7 +163,7 @@ async function signupWithEmail(email, password, fullName) {
 }
 
 async function logoutUser() {
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
     updateUIForLoggedOutUser();
     location.reload();
 }
@@ -185,14 +171,9 @@ async function logoutUser() {
 // ─── EXAMS ───
 
 async function loadExams() {
-    console.log('Loading exams...');
+    if (!elements.examsGrid) return;
     
-    if (!elements.examsGrid) {
-        console.error('❌ examsGrid element not found!');
-        return;
-    }
-    
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('exams')
         .select('*')
         .order('name');
@@ -201,8 +182,6 @@ async function loadExams() {
         console.error('Error loading exams:', error);
         return;
     }
-    
-    console.log('Exams loaded:', data.length);
     
     elements.examsGrid.innerHTML = data.map(exam => `
         <div class="exam-card" data-exam-id="${exam.id}" onclick="filterByExam(${exam.id})">
@@ -234,7 +213,6 @@ async function loadResources(reset = true) {
     isLoading = true;
     
     if (!elements.resourcesGrid) {
-        console.error('❌ resourcesGrid element not found!');
         isLoading = false;
         return;
     }
@@ -250,7 +228,7 @@ async function loadResources(reset = true) {
         `;
     }
     
-    let query = supabase
+    let query = supabaseClient
         .from('resources')
         .select(`
             *,
@@ -376,8 +354,6 @@ function createResourceCard(resource) {
     return card;
 }
 
-// ─── VOTING ───
-
 function hasUserVoted(resourceId, voteType) {
     const key = `${resourceId}-${voteType}`;
     return !!userVotes[key];
@@ -393,7 +369,7 @@ async function voteResource(resourceId, voteType) {
     const existingDown = hasUserVoted(resourceId, -1);
     
     if ((voteType === 1 && existingUp) || (voteType === -1 && existingDown)) {
-        const { error: deleteError } = await supabase
+        const { error: deleteError } = await supabaseClient
             .from('votes')
             .delete()
             .eq('resource_id', resourceId)
@@ -412,7 +388,7 @@ async function voteResource(resourceId, voteType) {
     
     if ((voteType === 1 && existingDown) || (voteType === -1 && existingUp)) {
         const oppositeVoteType = voteType === 1 ? -1 : 1;
-        const { error: deleteError } = await supabase
+        const { error: deleteError } = await supabaseClient
             .from('votes')
             .delete()
             .eq('resource_id', resourceId)
@@ -426,7 +402,7 @@ async function voteResource(resourceId, voteType) {
         delete userVotes[`${resourceId}-${oppositeVoteType}`];
     }
     
-    const { error: insertError } = await supabase
+    const { error: insertError } = await supabaseClient
         .from('votes')
         .insert({
             resource_id: resourceId,
@@ -458,7 +434,7 @@ function updateResourceCardVoteStatus(resourceId) {
 }
 
 async function refreshVoteCount(resourceId) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('resources')
         .select('upvotes, downvotes')
         .eq('id', resourceId)
@@ -472,8 +448,6 @@ async function refreshVoteCount(resourceId) {
     }
 }
 
-// ─── COMMENTS ───
-
 async function openComments(resourceId) {
     currentResourceId = resourceId;
     if (elements.commentModal) {
@@ -483,7 +457,7 @@ async function openComments(resourceId) {
 }
 
 async function loadComments(resourceId) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('comments')
         .select(`
             *,
@@ -526,7 +500,7 @@ async function loadComments(resourceId) {
 }
 
 async function loadCommentCount(resourceId) {
-    const { count, error } = await supabase
+    const { count, error } = await supabaseClient
         .from('comments')
         .select('*', { count: 'exact', head: true })
         .eq('resource_id', resourceId);
@@ -537,25 +511,21 @@ async function loadCommentCount(resourceId) {
     }
 }
 
-// ─── STATS ───
-
 async function updateStats() {
-    const { count: resourceCount } = await supabase
+    const { count: resourceCount } = await supabaseClient
         .from('resources')
         .select('*', { count: 'exact', head: true });
     if (elements.totalResources) {
         elements.totalResources.textContent = resourceCount || 0;
     }
     
-    const { count: userCount } = await supabase
+    const { count: userCount } = await supabaseClient
         .from('profiles')
         .select('*', { count: 'exact', head: true });
     if (elements.totalUsers) {
         elements.totalUsers.textContent = userCount || 0;
     }
 }
-
-// ─── FILTERS ───
 
 function filterByExam(examId) {
     currentExamFilter = examId;
@@ -570,8 +540,6 @@ function filterByExam(examId) {
     loadResources(true);
 }
 
-// ─── SEARCH ───
-
 let searchTimeout;
 if (elements.searchInput) {
     elements.searchInput.addEventListener('input', () => {
@@ -579,8 +547,6 @@ if (elements.searchInput) {
         searchTimeout = setTimeout(() => loadResources(true), 500);
     });
 }
-
-// ─── MODAL HELPERS ───
 
 function openModal(modal) {
     if (!modal) return;
@@ -594,25 +560,18 @@ function closeModal(modal) {
     document.body.style.overflow = '';
 }
 
-// ─── EVENT LISTENERS WITH SAFETY CHECKS ───
+// ─── EVENT LISTENERS ───
 
 if (elements.loginBtn) {
-    elements.loginBtn.addEventListener('click', () => {
-        console.log('Login button clicked');
-        openModal(elements.loginModal);
-    });
+    elements.loginBtn.addEventListener('click', () => openModal(elements.loginModal));
 }
 
 if (elements.signupBtn) {
-    elements.signupBtn.addEventListener('click', () => {
-        console.log('Signup button clicked');
-        openModal(elements.signupModal);
-    });
+    elements.signupBtn.addEventListener('click', () => openModal(elements.signupModal));
 }
 
 if (elements.heroAddBtn) {
     elements.heroAddBtn.addEventListener('click', () => {
-        console.log('Share button clicked');
         if (!currentUser) {
             openModal(elements.loginModal);
             return;
@@ -737,7 +696,7 @@ if (elements.resourceForm) {
         elements.submitResourceBtn.disabled = true;
         elements.submitResourceBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
         
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('resources')
             .insert({
                 title,
@@ -777,7 +736,7 @@ if (elements.commentForm) {
         elements.submitCommentBtn.disabled = true;
         elements.submitCommentBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
         
-        const { error } = await supabase
+        const { error } = await supabaseClient
             .from('comments')
             .insert({
                 resource_id: currentResourceId,
@@ -831,28 +790,36 @@ if (elements.myResourcesLink) {
 
 // ─── HAMBURGER MENU ───
 
-document.getElementById('hamburger')?.addEventListener('click', () => {
-    document.getElementById('navLinks')?.classList.toggle('open');
-});
+const hamburger = document.getElementById('hamburger');
+const navLinks = document.getElementById('navLinks');
 
-document.querySelectorAll('.nav-links a').forEach(link => {
-    link.addEventListener('click', () => {
-        document.getElementById('navLinks')?.classList.remove('open');
+if (hamburger) {
+    hamburger.addEventListener('click', () => {
+        if (navLinks) navLinks.classList.toggle('open');
     });
-});
+}
+
+if (navLinks) {
+    navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            navLinks.classList.remove('open');
+        });
+    });
+}
 
 // ─── NAV SCROLL EFFECT ───
 
 window.addEventListener('scroll', () => {
     const nav = document.getElementById('navbar');
-    if (window.scrollY > 40) nav?.classList.add('scrolled');
-    else nav?.classList.remove('scrolled');
+    if (nav) {
+        if (window.scrollY > 40) nav.classList.add('scrolled');
+        else nav.classList.remove('scrolled');
+    }
 });
 
 // ─── AUTH STATE LISTENER ───
 
-supabase.auth.onAuthStateChange((event, session) => {
-    console.log('Auth event:', event);
+supabaseClient.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
         currentUser = session.user;
         updateUIForLoggedInUser(session.user);
@@ -868,11 +835,9 @@ supabase.auth.onAuthStateChange((event, session) => {
 // ─── INIT ───
 
 async function init() {
-    console.log('Initializing app...');
     await checkAuth();
     await loadExams();
     await loadResources(true);
-    console.log('App initialized successfully');
 }
 
 init();

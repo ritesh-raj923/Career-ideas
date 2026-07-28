@@ -586,7 +586,6 @@ if (elements.loginForm) {
         try {
             await loginWithEmail(elements.loginEmail.value, elements.loginPassword.value);
             closeModal(elements.loginModal);
-            location.reload();
         } catch (error) {
             alert('Login failed: ' + error.message);
         }
@@ -825,7 +824,6 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         updateUIForLoggedInUser(session.user);
         ensureProfile(session.user);
         loadUserVotes();
-        location.reload();
     }
     if (event === 'SIGNED_OUT') {
         updateUIForLoggedOutUser();

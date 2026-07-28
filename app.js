@@ -452,7 +452,37 @@ async function loadExams() {
             `).join('');
     }
 }
+// ─── SECTOR FILTERS ───
+function setupSectorFilters() {
+    const filters = document.querySelectorAll('.sector-filter-btn');
+    if (!filters.length) return;
 
+    filters.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Remove active class from all
+            filters.forEach(b => b.classList.remove('active'));
+            // Add active class to clicked
+            btn.classList.add('active');
+
+            const sector = btn.dataset.sector;
+            const sectors = document.querySelectorAll('.exam-sector');
+
+            sectors.forEach(sectorEl => {
+                if (sector === 'all') {
+                    sectorEl.style.display = 'block';
+                } else {
+                    // Check if the sector header matches the clicked sector
+                    const header = sectorEl.querySelector('.exam-sector-title');
+                    if (header && header.textContent.trim() === sector) {
+                        sectorEl.style.display = 'block';
+                    } else {
+                        sectorEl.style.display = 'none';
+                    }
+                }
+            });
+        });
+    });
+}
 // ─── RESOURCES ───
 
 async function loadResources(reset = true) {
@@ -1084,6 +1114,7 @@ async function init() {
     await loadExams();
     await loadResources(true);
      applyTranslations(); // ⬅️ ADD THIS LINE
+    setupSectorFilters(); // <-- ADD THIS LINE
 }
 // ─── LANGUAGE SWITCHER ───
 const langSwitcher = document.getElementById('langSwitcher');

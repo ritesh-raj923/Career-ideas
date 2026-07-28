@@ -20,25 +20,26 @@
     <nav id="navbar">
         <div class="container nav-inner">
             <a href="#" class="logo">
-                <span class="logo-icon">📚</span> Exam<span>Hub</span>
+                <span class="logo-icon">📚</span> <span data-i18n="appName">ExamHub</span>
             </a>
             
             <div class="nav-center">
-    <input type="text" id="searchInput" placeholder="Search resources by title or exam..." />
-</div>
-<div class="nav-lang">
-    <select id="langSwitcher">
-        <option value="en">🇬🇧 English</option>
-        <option value="hi">🇮🇳 हिन्दी</option>
-    </select>
-</div>
+                <input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search resources by title or exam..." />
+            </div>
+            
+            <div class="nav-lang">
+                <select id="langSwitcher">
+                    <option value="en">🇬🇧 English</option>
+                    <option value="hi">🇮🇳 हिन्दी</option>
+                </select>
+            </div>
             
             <ul class="nav-links" id="navLinks">
-                <li><a href="#exams">Exams</a></li>
-                <li><a href="#resources">Resources</a></li>
+                <li><a href="#exams" data-i18n="navExams">Exams</a></li>
+                <li><a href="#resources" data-i18n="navResources">Resources</a></li>
                 <li id="authLinks">
-                    <a href="#" id="loginBtn" class="nav-cta">Login</a>
-                    <a href="#" id="signupBtn" class="nav-secondary">Sign Up</a>
+                    <a href="#" id="loginBtn" class="nav-cta" data-i18n="login">Login</a>
+                    <a href="#" id="signupBtn" class="nav-secondary" data-i18n="signup">Sign Up</a>
                 </li>
                 <li id="userMenu" style="display:none;">
                     <div class="user-dropdown">
@@ -46,10 +47,10 @@
                         <span id="userName"></span>
                         <i class="fas fa-chevron-down"></i>
                         <div class="dropdown-menu">
-                            <a href="#" id="profileLink"><i class="fas fa-user"></i> Profile</a>
-                            <a href="#" id="myResourcesLink"><i class="fas fa-list"></i> My Resources</a>
+                            <a href="#" id="profileLink"><i class="fas fa-user"></i> <span data-i18n="profile">Profile</span></a>
+                            <a href="#" id="myResourcesLink"><i class="fas fa-list"></i> <span data-i18n="myResources">My Resources</span></a>
                             <hr />
-                            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span data-i18n="logout">Logout</span></a>
                         </div>
                     </div>
                 </li>
@@ -65,34 +66,34 @@
     <section class="hero" id="home">
         <div class="container hero-grid">
             <div class="hero-content">
-                <div class="hero-badge">
+                <div class="hero-badge" data-i18n="heroBadge">
                     <span class="dot"></span> India's Largest Community Platform
                 </div>
-                <h1>
+                <h1 data-i18n="heroTitle">
                     Find <span class="gold">Exam Resources</span><br />
                     Shared by <span class="gold">Toppers</span>
                 </h1>
-                <p>
+                <p data-i18n="heroDesc">
                     Join thousands of students sharing the best video lectures, notes, 
                     and preparation strategies for JEE, NEET, UPSC, SSC, Railways, and more.
                     Learn from those who've succeeded.
                 </p>
                 <div class="hero-actions">
-                    <a href="#resources" class="btn-primary">📖 Browse Resources</a>
-                    <a href="#" class="btn-secondary" id="heroAddBtn">✨ Share Resources</a>
+                    <a href="#resources" class="btn-primary" data-i18n="browseBtn">📖 Browse Resources</a>
+                    <a href="#" class="btn-secondary" id="heroAddBtn" data-i18n="shareBtn">✨ Share Resources</a>
                 </div>
                 <div class="hero-stats">
                     <div class="stat">
                         <span class="stat-number" id="totalResources">0</span>
-                        <span class="stat-label">Resources Shared</span>
+                        <span class="stat-label" data-i18n="statsResources">Resources Shared</span>
                     </div>
                     <div class="stat">
                         <span class="stat-number" id="totalUsers">0</span>
-                        <span class="stat-label">Active Users</span>
+                        <span class="stat-label" data-i18n="statsUsers">Active Users</span>
                     </div>
                     <div class="stat">
                         <span class="stat-number" id="totalExams">12</span>
-                        <span class="stat-label">Exams Covered</span>
+                        <span class="stat-label" data-i18n="statsExams">Exams Covered</span>
                     </div>
                 </div>
             </div>
@@ -110,9 +111,9 @@
     <!-- ====== EXAMS SECTION ====== -->
     <section class="exams-section" id="exams">
         <div class="container">
-            <span class="section-label">📋 Categories</span>
-            <h2 class="section-title">Browse by <span class="highlight">Exam</span></h2>
-            <p class="section-desc">Select an exam to see all resources shared by the community.</p>
+            <span class="section-label" data-i18n="examsLabel">📋 Categories</span>
+            <h2 class="section-title" data-i18n="examsTitle">Browse by <span class="highlight">Exam</span></h2>
+            <p class="section-desc" data-i18n="examsDesc">Select an exam to see all resources shared by the community.</p>
             <div class="exams-grid" id="examsGrid">
                 <!-- Dynamically loaded from Supabase -->
             </div>
@@ -124,28 +125,28 @@
         <div class="container">
             <div class="resources-header">
                 <div>
-                    <span class="section-label">📖 Community Resources</span>
-                    <h2 class="section-title">Latest <span class="highlight">Study Materials</span></h2>
+                    <span class="section-label" data-i18n="resourcesLabel">📖 Community Resources</span>
+                    <h2 class="section-title" data-i18n="resourcesTitle">Latest <span class="highlight">Study Materials</span></h2>
                 </div>
                 <div class="resources-controls">
                     <select id="examFilter" class="filter-select">
-                        <option value="">All Exams</option>
+                        <option value="" data-i18n="filterAll">All Exams</option>
                     </select>
                     <select id="sortFilter" class="filter-select">
-                        <option value="upvotes">Most Upvoted</option>
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
+                        <option value="upvotes" data-i18n="sortUpvotes">Most Upvoted</option>
+                        <option value="newest" data-i18n="sortNewest">Newest First</option>
+                        <option value="oldest" data-i18n="sortOldest">Oldest First</option>
                     </select>
                 </div>
             </div>
             <div class="resources-grid" id="resourcesGrid">
                 <div class="loading-state">
                     <i class="fas fa-spinner fa-spin"></i>
-                    <p>Loading resources...</p>
+                    <p data-i18n="loadingResources">Loading resources...</p>
                 </div>
             </div>
             <div class="load-more">
-                <button id="loadMoreBtn" class="btn-secondary">Load More</button>
+                <button id="loadMoreBtn" class="btn-secondary" data-i18n="loadMore">Load More</button>
             </div>
         </div>
     </section>
@@ -154,28 +155,28 @@
     <div class="modal" id="addResourceModal">
         <div class="modal-content">
             <span class="modal-close" id="closeModal">&times;</span>
-            <h2>✨ Share a Resource</h2>
-            <p class="modal-desc">Help fellow students by sharing useful study materials.</p>
+            <h2 data-i18n="shareTitle">✨ Share a Resource</h2>
+            <p class="modal-desc" data-i18n="shareDesc">Help fellow students by sharing useful study materials.</p>
             <form id="resourceForm">
                 <div class="form-group">
-                    <label for="resourceTitle">Title *</label>
-                    <input type="text" id="resourceTitle" placeholder="e.g., Best YouTube Playlist for JEE Physics" required />
+                    <label for="resourceTitle" data-i18n="formTitle">Title *</label>
+                    <input type="text" id="resourceTitle" data-i18n-placeholder="formPlaceholderTitle" placeholder="e.g., Best YouTube Playlist for JEE Physics" required />
                 </div>
                 <div class="form-group">
-                    <label for="resourceExam">Exam *</label>
+                    <label for="resourceExam" data-i18n="formExam">Exam *</label>
                     <select id="resourceExam" required>
-                        <option value="">Select an exam</option>
+                        <option value="" data-i18n="filterAll">Select an exam</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="resourceLink">Resource Link *</label>
-                    <input type="url" id="resourceLink" placeholder="https://youtube.com/playlist?list=..." required />
+                    <label for="resourceLink" data-i18n="formLink">Resource Link *</label>
+                    <input type="url" id="resourceLink" data-i18n-placeholder="formPlaceholderLink" placeholder="https://youtube.com/playlist?list=..." required />
                 </div>
                 <div class="form-group">
-                    <label for="resourceDesc">Description</label>
-                    <textarea id="resourceDesc" rows="3" placeholder="What's special about this resource? Any tips?"></textarea>
+                    <label for="resourceDesc" data-i18n="formDesc">Description</label>
+                    <textarea id="resourceDesc" rows="3" data-i18n-placeholder="formPlaceholderDesc" placeholder="What's special about this resource? Any tips?"></textarea>
                 </div>
-                <button type="submit" class="btn-primary" id="submitResourceBtn">
+                <button type="submit" class="btn-primary" id="submitResourceBtn" data-i18n="submitBtn">
                     <i class="fas fa-upload"></i> Share Resource
                 </button>
             </form>
@@ -186,25 +187,25 @@
     <div class="modal" id="loginModal">
         <div class="modal-content modal-sm">
             <span class="modal-close" id="closeLoginModal">&times;</span>
-            <h2>Welcome Back</h2>
-            <p class="modal-desc">Login to access all features.</p>
+            <h2 data-i18n="loginTitle">Welcome Back</h2>
+            <p class="modal-desc" data-i18n="loginDesc">Login to access all features.</p>
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="loginEmail">Email</label>
+                    <label for="loginEmail" data-i18n="loginEmail">Email</label>
                     <input type="email" id="loginEmail" placeholder="your@email.com" required />
                 </div>
                 <div class="form-group">
-                    <label for="loginPassword">Password</label>
+                    <label for="loginPassword" data-i18n="loginPassword">Password</label>
                     <input type="password" id="loginPassword" placeholder="••••••••" required />
                 </div>
-                <button type="submit" class="btn-primary" style="width:100%;">Login</button>
+                <button type="submit" class="btn-primary" style="width:100%;" data-i18n="loginBtnText">Login</button>
             </form>
             <div class="social-login">
-                <button id="googleLoginBtn" class="btn-google">
+                <button id="googleLoginBtn" class="btn-google" data-i18n="googleBtn">
                     <i class="fab fa-google"></i> Continue with Google
                 </button>
             </div>
-            <p class="auth-switch">Don't have an account? <a href="#" id="switchToSignup">Sign Up</a></p>
+            <p class="auth-switch"><span data-i18n="noAccount">Don't have an account?</span> <a href="#" id="switchToSignup" data-i18n="signupLink">Sign Up</a></p>
         </div>
     </div>
 
@@ -212,29 +213,29 @@
     <div class="modal" id="signupModal">
         <div class="modal-content modal-sm">
             <span class="modal-close" id="closeSignupModal">&times;</span>
-            <h2>Create Account</h2>
-            <p class="modal-desc">Join the community of learners.</p>
+            <h2 data-i18n="signupTitle">Create Account</h2>
+            <p class="modal-desc" data-i18n="signupDesc">Join the community of learners.</p>
             <form id="signupForm">
                 <div class="form-group">
-                    <label for="signupName">Full Name</label>
+                    <label for="signupName" data-i18n="signupName">Full Name</label>
                     <input type="text" id="signupName" placeholder="Your Name" required />
                 </div>
                 <div class="form-group">
-                    <label for="signupEmail">Email</label>
+                    <label for="signupEmail" data-i18n="signupEmail">Email</label>
                     <input type="email" id="signupEmail" placeholder="your@email.com" required />
                 </div>
                 <div class="form-group">
-                    <label for="signupPassword">Password (min 6 chars)</label>
+                    <label for="signupPassword" data-i18n="signupPassword">Password (min 6 chars)</label>
                     <input type="password" id="signupPassword" placeholder="••••••••" minlength="6" required />
                 </div>
-                <button type="submit" class="btn-primary" style="width:100%;">Sign Up</button>
+                <button type="submit" class="btn-primary" style="width:100%;" data-i18n="signupBtnText">Sign Up</button>
             </form>
             <div class="social-login">
-                <button id="googleSignupBtn" class="btn-google">
+                <button id="googleSignupBtn" class="btn-google" data-i18n="googleBtn">
                     <i class="fab fa-google"></i> Continue with Google
                 </button>
             </div>
-            <p class="auth-switch">Already have an account? <a href="#" id="switchToLogin">Login</a></p>
+            <p class="auth-switch"><span data-i18n="haveAccount">Already have an account?</span> <a href="#" id="switchToLogin" data-i18n="loginLink">Login</a></p>
         </div>
     </div>
 
@@ -242,17 +243,17 @@
     <div class="modal" id="commentModal">
         <div class="modal-content modal-lg">
             <span class="modal-close" id="closeCommentModal">&times;</span>
-            <h2>💬 Comments</h2>
+            <h2 data-i18n="commentTitle">💬 Comments</h2>
             <div id="commentsContainer">
                 <div class="loading-state" style="padding:20px 0;">
-                    <p>No comments yet. Be the first!</p>
+                    <p data-i18n="noComments">No comments yet. Be the first!</p>
                 </div>
             </div>
             <form id="commentForm">
                 <div class="form-group">
-                    <textarea id="commentInput" rows="2" placeholder="Share your thoughts or ask a question..."></textarea>
+                    <textarea id="commentInput" rows="2" data-i18n-placeholder="commentPlaceholder" placeholder="Share your thoughts or ask a question..."></textarea>
                 </div>
-                <button type="submit" class="btn-primary" id="submitCommentBtn">
+                <button type="submit" class="btn-primary" id="submitCommentBtn" data-i18n="commentPost">
                     <i class="fas fa-paper-plane"></i> Post Comment
                 </button>
             </form>

@@ -14,6 +14,7 @@ const PAGE_SIZE = 12;
 let isLoading = false;
 let hasMore = true;
 let currentResourceId = null;
+let userVotes = {}; // Stores user's votes for UI highlight
 
 // ─── DOM REFS ───
 const $ = (id) => document.getElementById(id);
@@ -86,6 +87,7 @@ async function checkAuth() {
         currentUser = user;
         updateUIForLoggedInUser(user);
         await ensureProfile(user);
+        await loadUserVotes(); // Load user's votes for UI highlight
     }
 }
 
@@ -100,6 +102,7 @@ function updateUIForLoggedOutUser() {
     elements.authLinks.style.display = 'flex';
     elements.userMenu.style.display = 'none';
     currentUser = null;
+    userVotes = {}; // Clear votes on logout
 }
 
 async function ensureProfile(user) {
@@ -110,7 +113,6 @@ async function ensureProfile(user) {
         .single();
     
     if (error && error.code === 'PGRST116') {
-        // Profile doesn't exist, create it
         await supabase.from('profiles').insert({
             id: user.id,
             full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
@@ -118,6 +120,26 @@ async function ensureProfile(user) {
             username: user.email?.split('@')[0] + Math.floor(Math.random() * 1000)
         });
     }
+}
+
+// ─── LOAD USER VOTES ───
+
+async function loadUserVotes() {
+    if (!currentUser) return;
+    
+    const { data, error } = await supabase
+        .from('votes')
+        .select('resource_id, vote_type')
+        .eq('user_id', currentUser.id);
+    
+    if (error) {
+        console.error('Error loading user votes:', error);
+        return;
+    }
+    
+    data.forEach(vote => {
+        userVotes[`${vote.resource_id}-${vote.vote_type}`] = true;
+    });
 }
 
 // ─── AUTH: Login ───
@@ -168,7 +190,6 @@ async function loadExams() {
         return;
     }
     
-    // Render exams grid
     elements.examsGrid.innerHTML = data.map(exam => `
         <div class="exam-card" data-exam-id="${exam.id}" onclick="filterByExam(${exam.id})">
             <span class="exam-icon">${exam.icon || '📚'}</span>
@@ -177,13 +198,11 @@ async function loadExams() {
         </div>
     `).join('');
     
-    // Populate dropdown in add resource form
     elements.resourceExam.innerHTML = '<option value="">Select an exam</option>' +
         data.map(exam => `
             <option value="${exam.id}">${exam.name}</option>
         `).join('');
     
-    // Populate filter dropdown
     elements.examFilter.innerHTML = '<option value="">All Exams</option>' +
         data.map(exam => `
             <option value="${exam.id}">${exam.name}</option>
@@ -215,18 +234,15 @@ async function loadResources(reset = true) {
             exams (name, icon)
         `);
     
-    // Apply exam filter
     if (currentExamFilter) {
         query = query.eq('exam_id', parseInt(currentExamFilter));
     }
     
-    // Apply search
     const searchTerm = elements.searchInput.value.trim();
     if (searchTerm) {
         query = query.ilike('title', `%${searchTerm}%`);
     }
     
-    // Apply sorting
     if (currentSort === 'upvotes') {
         query = query.order('upvotes', { ascending: false });
     } else if (currentSort === 'newest') {
@@ -235,7 +251,6 @@ async function loadResources(reset = true) {
         query = query.order('created_at', { ascending: true });
     }
     
-    // Pagination
     const from = page * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
     query = query.range(from, to);
@@ -269,7 +284,6 @@ async function loadResources(reset = true) {
         return;
     }
     
-    // Render each resource
     data.forEach(resource => {
         const card = createResourceCard(resource);
         elements.resourcesGrid.appendChild(card);
@@ -280,7 +294,6 @@ async function loadResources(reset = true) {
     isLoading = false;
     elements.loadMoreBtn.style.display = hasMore ? 'inline-flex' : 'none';
     
-    // Update stats
     if (reset) {
         updateStats();
     }
@@ -296,6 +309,10 @@ function createResourceCard(resource) {
     const avatarUrl = resource.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}`;
     const createdAt = new Date(resource.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     
+    // Check if user has voted on this resource
+    const upvoted = hasUserVoted(resource.id, 1);
+    const downvoted = hasUserVoted(resource.id, -1);
+    
     card.innerHTML = `
         <div class="resource-header">
             <span class="resource-exam">${examIcon} ${examName}</span>
@@ -308,11 +325,11 @@ function createResourceCard(resource) {
         </a>
         <div class="resource-footer">
             <div class="vote-buttons">
-                <button onclick="voteResource(${resource.id}, 1)" class="${hasUserVoted(resource.id, 1) ? 'voted-up' : ''}">
+                <button onclick="voteResource(${resource.id}, 1)" class="${upvoted ? 'voted-up' : ''}">
                     <i class="fas fa-arrow-up"></i>
                 </button>
                 <span class="vote-count" id="voteCount-${resource.id}">${resource.upvotes || 0}</span>
-                <button onclick="voteResource(${resource.id}, -1)" class="${hasUserVoted(resource.id, -1) ? 'voted-down' : ''}">
+                <button onclick="voteResource(${resource.id}, -1)" class="${downvoted ? 'voted-down' : ''}">
                     <i class="fas fa-arrow-down"></i>
                 </button>
             </div>
@@ -328,19 +345,15 @@ function createResourceCard(resource) {
         </div>
     `;
     
-    // Load comment count for this resource
     loadCommentCount(resource.id);
-    
     return card;
 }
 
 // ─── VOTING ───
 
-let userVotes = {};
-
 function hasUserVoted(resourceId, voteType) {
     const key = `${resourceId}-${voteType}`;
-    return userVotes[key] || false;
+    return !!userVotes[key];
 }
 
 async function voteResource(resourceId, voteType) {
@@ -349,16 +362,11 @@ async function voteResource(resourceId, voteType) {
         return;
     }
     
-    // Check if user already voted
-    const { data: existing, error: checkError } = await supabase
-        .from('votes')
-        .select('*')
-        .eq('resource_id', resourceId)
-        .eq('user_id', currentUser.id)
-        .single();
+    const existingUp = hasUserVoted(resourceId, 1);
+    const existingDown = hasUserVoted(resourceId, -1);
     
-    if (existing) {
-        // User already voted, remove it (toggle off)
+    // If user already voted with same vote type, remove it (toggle off)
+    if ((voteType === 1 && existingUp) || (voteType === -1 && existingDown)) {
         const { error: deleteError } = await supabase
             .from('votes')
             .delete()
@@ -370,9 +378,29 @@ async function voteResource(resourceId, voteType) {
             return;
         }
         
-        // Refresh the vote count
+        // Remove from userVotes
+        delete userVotes[`${resourceId}-${voteType}`];
         refreshVoteCount(resourceId);
+        updateResourceCardVoteStatus(resourceId);
         return;
+    }
+    
+    // If user already voted the opposite way, remove the opposite vote first
+    if ((voteType === 1 && existingDown) || (voteType === -1 && existingUp)) {
+        const oppositeVoteType = voteType === 1 ? -1 : 1;
+        const { error: deleteError } = await supabase
+            .from('votes')
+            .delete()
+            .eq('resource_id', resourceId)
+            .eq('user_id', currentUser.id);
+        
+        if (deleteError) {
+            console.error('Error removing opposite vote:', deleteError);
+            return;
+        }
+        
+        // Remove opposite vote from userVotes
+        delete userVotes[`${resourceId}-${oppositeVoteType}`];
     }
     
     // Insert new vote
@@ -390,8 +418,28 @@ async function voteResource(resourceId, voteType) {
         return;
     }
     
-    // Refresh the vote count
+    // Add to userVotes
+    userVotes[`${resourceId}-${voteType}`] = true;
     refreshVoteCount(resourceId);
+    updateResourceCardVoteStatus(resourceId);
+}
+
+function updateResourceCardVoteStatus(resourceId) {
+    const card = document.querySelector(`.resource-card`);
+    if (!card) return;
+    
+    // Since we can't easily find the specific card, we'll reload the resources
+    // A better approach would be to find the specific card, but this is simpler
+    // and works for now
+    const upBtn = document.querySelector(`button[onclick="voteResource(${resourceId}, 1)"]`);
+    const downBtn = document.querySelector(`button[onclick="voteResource(${resourceId}, -1)"]`);
+    
+    if (upBtn) {
+        upBtn.classList.toggle('voted-up', hasUserVoted(resourceId, 1));
+    }
+    if (downBtn) {
+        downBtn.classList.toggle('voted-down', hasUserVoted(resourceId, -1));
+    }
 }
 
 async function refreshVoteCount(resourceId) {
@@ -469,13 +517,11 @@ async function loadCommentCount(resourceId) {
 // ─── STATS ───
 
 async function updateStats() {
-    // Total resources
     const { count: resourceCount } = await supabase
         .from('resources')
         .select('*', { count: 'exact', head: true });
     elements.totalResources.textContent = resourceCount || 0;
     
-    // Total users
     const { count: userCount } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
@@ -488,7 +534,6 @@ function filterByExam(examId) {
     currentExamFilter = examId;
     elements.examFilter.value = examId;
     
-    // Highlight active exam
     document.querySelectorAll('.exam-card').forEach(card => {
         card.classList.toggle('active', parseInt(card.dataset.examId) === examId);
     });
@@ -518,7 +563,6 @@ function closeModal(modal) {
 
 // ─── EVENT LISTENERS ───
 
-// Auth buttons
 elements.loginBtn.addEventListener('click', () => openModal(elements.loginModal));
 elements.signupBtn.addEventListener('click', () => openModal(elements.signupModal));
 elements.heroAddBtn.addEventListener('click', () => {
@@ -529,7 +573,6 @@ elements.heroAddBtn.addEventListener('click', () => {
     openModal(elements.addResourceModal);
 });
 
-// Login form
 elements.loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
@@ -541,7 +584,6 @@ elements.loginForm.addEventListener('submit', async (e) => {
     }
 });
 
-// Signup form
 elements.signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
@@ -557,7 +599,6 @@ elements.signupForm.addEventListener('submit', async (e) => {
     }
 });
 
-// Google Login
 elements.googleLoginBtn.addEventListener('click', async () => {
     try {
         await loginWithGoogle();
@@ -576,7 +617,6 @@ elements.googleSignupBtn.addEventListener('click', async () => {
     }
 });
 
-// Switch between login and signup
 elements.switchToSignup.addEventListener('click', (e) => {
     e.preventDefault();
     closeModal(elements.loginModal);
@@ -589,23 +629,19 @@ elements.switchToLogin.addEventListener('click', (e) => {
     openModal(elements.loginModal);
 });
 
-// Close modals
 elements.closeLoginModal.addEventListener('click', () => closeModal(elements.loginModal));
 elements.closeSignupModal.addEventListener('click', () => closeModal(elements.signupModal));
 elements.closeModal.addEventListener('click', () => closeModal(elements.addResourceModal));
 elements.closeCommentModal.addEventListener('click', () => closeModal(elements.commentModal));
 
-// Click outside to close
 window.addEventListener('click', (e) => {
     if (e.target.classList.contains('modal')) {
         closeModal(e.target);
     }
 });
 
-// Logout
 elements.logoutBtn.addEventListener('click', logoutUser);
 
-// Resource form
 elements.resourceForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -651,7 +687,6 @@ elements.resourceForm.addEventListener('submit', async (e) => {
     loadResources(true);
 });
 
-// Comment form
 elements.commentForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -687,22 +722,18 @@ elements.commentForm.addEventListener('submit', async (e) => {
     loadCommentCount(currentResourceId);
 });
 
-// Exam filter
 elements.examFilter.addEventListener('change', () => {
     currentExamFilter = elements.examFilter.value;
     loadResources(true);
 });
 
-// Sort filter
 elements.sortFilter.addEventListener('change', () => {
     currentSort = elements.sortFilter.value;
     loadResources(true);
 });
 
-// Load more
 elements.loadMoreBtn.addEventListener('click', () => loadResources(false));
 
-// Profile link
 elements.profileLink.addEventListener('click', () => {
     alert('Profile feature coming soon!');
 });
@@ -738,6 +769,7 @@ supabase.auth.onAuthStateChange((event, session) => {
         currentUser = session.user;
         updateUIForLoggedInUser(session.user);
         ensureProfile(session.user);
+        loadUserVotes();
         location.reload();
     }
     if (event === 'SIGNED_OUT') {
@@ -754,6 +786,3 @@ async function init() {
 }
 
 init();
-
-// ─── KEEP YOUR EXISTING FUNCTIONS BELOW ───
-// (renderModels, renderCareers, renderResources, setupFilters, setupQuiz, setupNav, etc.)

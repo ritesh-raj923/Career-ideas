@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CareerQuest India – Find Your Path</title>
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <!-- ====== NAV ====== -->
+    <nav id="navbar">
+        <div class="container nav-inner">
+            <a href="#" class="logo">
+                <span class="logo-icon">🚀</span> Career<span>Quest</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#models">Role Models</a></li>
+                <li><a href="#careers">Careers</a></li>
+                <li><a href="#assessment">Assessment</a></li>
+                <li><a href="#resources">Resources</a></li>
+                <li><a href="#assessment" class="nav-cta">Find Your Path</a></li>
+            </ul>
+            <button class="hamburger" id="hamburger" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ====== HERO ====== -->
+    <section class="hero" id="home">
+        <div class="container hero-grid">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="dot"></span> India's #1 Career Discovery Platform
+                </div>
+                <h1>
+                    Find Your <span class="gold">True Calling</span><br />
+                    with India's Finest <span class="gold">Role Models</span>
+                </h1>
+                <p>
+                    Struggling to choose a career? Get inspired by legends who started from nothing. 
+                    Discover your strengths, explore future-ready paths, and build a life of purpose — right here in India.
+                </p>
+                <div class="hero-actions">
+                    <a href="#assessment" class="btn-primary">⚡ Start Your Journey</a>
+                    <a href="#models" class="btn-secondary">👥 Meet Your Mentors</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat"><span class="stat-number">10+</span><span class="stat-label">Career Paths</span></div>
+                    <div class="stat"><span class="stat-number">30+</span><span class="stat-label">Role Models</span></div>
+                    <div class="stat"><span class="stat-number">100%</span><span class="stat-label">India-Focused</span></div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="orb">
+                    <div class="orb-inner">🇮🇳<small>Your Future Starts Now</small></div>
+                    <span class="floating-tag" style="top: 6%; right: -6%;">🌟 Dream Big</span>
+                    <span class="floating-tag" style="bottom: 10%; left: -8%;">📈 Future Ready</span>
+                    <span class="floating-tag" style="top: 38%; left: -14%;">🏆 Role Models</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== ROLE MODELS ====== -->
+    <section class="role-models" id="models">
+        <div class="container">
+            <span class="section-label">🌟 Inspiration</span>
+            <h2 class="section-title">Role Models Who <span class="highlight">Transformed India</span></h2>
+            <p class="section-desc">From humble beginnings to global icons — these achievers prove that with the right mindset, any career path can lead to greatness.</p>
+            <div class="models-grid" id="modelsGrid"></div>
+        </div>
+    </section>
+
+    <!-- ====== CAREER PATHS ====== -->
+    <section class="careers" id="careers">
+        <div class="container">
+            <span class="section-label">📋 Explore</span>
+            <h2 class="section-title">Career Paths with <span class="highlight">Future Scope</span> in India</h2>
+            <p class="section-desc">Filter by your interest area and see real growth potential, salary trends, and how these careers are shaping India's future.</p>
+            <div class="career-filters" id="careerFilters">
+                <button class="active" data-filter="all">All</button>
+                <button data-filter="tech">💻 Technology</button>
+                <button data-filter="business">📊 Business</button>
+                <button data-filter="creative">🎨 Creative</button>
+                <button data-filter="science">🔬 Science</button>
+                <button data-filter="govt">🏛️ Government</button>
+            </div>
+            <div class="careers-grid" id="careersGrid"></div>
+        </div>
+    </section>
+
+    <!-- ====== ASSESSMENT ====== -->
+    <section class="assessment" id="assessment">
+        <div class="container">
+            <span class="section-label">🧠 Discover</span>
+            <h2 class="section-title">Find Your <span class="highlight">Ideal Career</span> in 2 Minutes</h2>
+            <p class="section-desc">Answer a few questions and get a personalised career recommendation based on your interests and strengths.</p>
+            <div class="assessment-wrap">
+                <div class="quiz-box" id="quizBox">
+                    <div id="quizContent"></div>
+                    <div class="quiz-nav">
+                        <button id="prevBtn" disabled>← Back</button>
+                        <button id="nextBtn" class="primary">Next →</button>
+                        <button id="resetBtn" style="display:none;">🔄 Start Over</button>
+                    </div>
+                </div>
+                <div class="quiz-result" id="quizResult">
+                    <div class="result-placeholder" id="resultPlaceholder">
+                        <span class="big-icon">🧭</span>
+                        Your personalised career recommendation will appear here.<br />
+                        <span style="font-size:0.8rem;color:var(--text-muted);">Answer the questions to get started.</span>
+                    </div>
+                    <div class="result-content" id="resultContent" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== RESOURCES ====== -->
+    <section class="resources" id="resources">
+        <div class="container">
+            <span class="section-label">📚 Study Resources</span>
+            <h2 class="section-title">Free Learning Platforms to <span class="highlight">Supercharge</span> Your Career</h2>
+            <p class="section-desc">Curated resources — from free courses to government schemes — to help you build skills, find internships, and land your dream job in India.</p>
+            <div class="resources-grid" id="resourcesGrid">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== FOOTER ====== -->
+    <footer>
+        <div class="container footer-inner">
+            <p>© 2026 <strong>CareerQuest India</strong> — Empowering the next generation of Indian achievers.</p>
+            <div class="footer-socials">
+                <a href="#">💡 About</a>
+                <a href="#">📧 Contact</a>
+                <a href="#">📖 Blog</a>
+                <a href="#">🤝 Mentors</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

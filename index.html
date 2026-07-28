@@ -107,13 +107,25 @@
             </div>
         </div>
     </section>
-
+  
     <!-- ====== EXAMS SECTION ====== -->
     <section class="exams-section" id="exams">
         <div class="container">
             <span class="section-label" data-i18n="examsLabel">📋 Categories</span>
             <h2 class="section-title" data-i18n="examsTitle">Browse by <span class="highlight">Exam</span></h2>
             <p class="section-desc" data-i18n="examsDesc">Select an exam to see all resources shared by the community.</p>
+            <!-- ⬇️⬇️⬇️ PASTE IT HERE ⬇️⬇️⬇️ -->
+<div class="exam-sector-filters">
+    <button class="sector-filter-btn active" data-sector="all">All</button>
+    <button class="sector-filter-btn" data-sector="Foundation">🏫 Foundation</button>
+    <button class="sector-filter-btn" data-sector="Engineering">🔬 Engineering</button>
+    <button class="sector-filter-btn" data-sector="Medical">🩺 Medical</button>
+    <button class="sector-filter-btn" data-sector="Government Jobs">🏛️ Government Jobs</button>
+    <button class="sector-filter-btn" data-sector="Management">💼 Management</button>
+    <button class="sector-filter-btn" data-sector="Law">⚖️ Law</button>
+    <button class="sector-filter-btn" data-sector="Design">🎨 Design</button>
+</div>
+<!-- ⬆️⬆️⬆️ PASTE IT HERE ⬆️⬆️⬆️ -->
             <div class="exams-grid" id="examsGrid">
                 <!-- Dynamically loaded from Supabase -->
             </div>

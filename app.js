@@ -1,8 +1,10 @@
-
-const SUPABASE_URL = 'https://qawdfokessggqnjlfztn.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_y-fsbvqs6zvqj36t779mAVA_kCUGY_';
+// ─── SUPABASE CONFIGURATION ───
+const SUPABASE_URL = 'https://qadfokessggpnjfztn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_pubLISHable_y-fsbvg6zvgj36779mAVALKUGY';
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+console.log('✅ app.js loaded successfully');
 
 // ─── STATE ───
 let currentUser = null;
@@ -68,15 +70,21 @@ const elements = {
     submitCommentBtn: $('submitCommentBtn'),
 };
 
+console.log('DOM elements loaded:', elements);
+
 // ─── AUTH FUNCTIONS ───
 
 async function checkAuth() {
+    console.log('Checking auth...');
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
         currentUser = user;
         updateUIForLoggedInUser(user);
         await ensureProfile(user);
         await loadUserVotes();
+        console.log('User logged in:', user.email);
+    } else {
+        console.log('No user logged in');
     }
 }
 
@@ -108,6 +116,7 @@ async function ensureProfile(user) {
             avatar_url: user.user_metadata?.avatar_url || null,
             username: user.email?.split('@')[0] + Math.floor(Math.random() * 1000)
         });
+        console.log('Profile created for user:', user.email);
     }
 }
 
@@ -127,6 +136,7 @@ async function loadUserVotes() {
     data.forEach(vote => {
         userVotes[`${vote.resource_id}-${vote.vote_type}`] = true;
     });
+    console.log('User votes loaded:', Object.keys(userVotes).length);
 }
 
 async function loginWithEmail(email, password) {
@@ -165,6 +175,7 @@ async function logoutUser() {
 // ─── EXAMS ───
 
 async function loadExams() {
+    console.log('Loading exams...');
     const { data, error } = await supabase
         .from('exams')
         .select('*')
@@ -174,6 +185,8 @@ async function loadExams() {
         console.error('Error loading exams:', error);
         return;
     }
+    
+    console.log('Exams loaded:', data.length);
     
     elements.examsGrid.innerHTML = data.map(exam => `
         <div class="exam-card" data-exam-id="${exam.id}" onclick="filterByExam(${exam.id})">
@@ -535,9 +548,18 @@ function closeModal(modal) {
 
 // ─── EVENT LISTENERS ───
 
-elements.loginBtn.addEventListener('click', () => openModal(elements.loginModal));
-elements.signupBtn.addEventListener('click', () => openModal(elements.signupModal));
+elements.loginBtn.addEventListener('click', () => {
+    console.log('Login button clicked');
+    openModal(elements.loginModal);
+});
+
+elements.signupBtn.addEventListener('click', () => {
+    console.log('Signup button clicked');
+    openModal(elements.signupModal);
+});
+
 elements.heroAddBtn.addEventListener('click', () => {
+    console.log('Share button clicked');
     if (!currentUser) {
         openModal(elements.loginModal);
         return;
@@ -737,6 +759,7 @@ window.addEventListener('scroll', () => {
 // ─── AUTH STATE LISTENER ───
 
 supabase.auth.onAuthStateChange((event, session) => {
+    console.log('Auth event:', event);
     if (event === 'SIGNED_IN' && session?.user) {
         currentUser = session.user;
         updateUIForLoggedInUser(session.user);
@@ -752,9 +775,11 @@ supabase.auth.onAuthStateChange((event, session) => {
 // ─── INIT ───
 
 async function init() {
+    console.log('Initializing app...');
     await checkAuth();
     await loadExams();
     await loadResources(true);
+    console.log('App initialized successfully');
 }
 
 init();

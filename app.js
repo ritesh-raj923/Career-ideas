@@ -1030,12 +1030,23 @@ if (elements.resourceForm) {
         }
         
         alert('Resource shared successfully! 🎉');
+        
+        // ─── 🔥 ADD REPUTATION FOR UPLOADING ───
+        try {
+            await supabaseClient
+                .from('profiles')
+                .update({ reputation: supabaseClient.sql`reputation + 1` })
+                .eq('id', currentUser.id);
+            console.log('✅ +1 Reputation added for upload!');
+        } catch (repError) {
+            console.error('Error updating reputation:', repError);
+        }
+        
         closeModal(elements.addResourceModal);
         elements.resourceForm.reset();
         loadResources(true);
     });
 }
-
 if (elements.commentForm) {
     elements.commentForm.addEventListener('submit', async (e) => {
         e.preventDefault();

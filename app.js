@@ -2008,23 +2008,6 @@ if (canvas) {
         }
     });
 }   
-
-// ─── ADD TAB SWITCHER FOR PODS ───
-// Update the setupTabs function to include pods
-const originalSetupTabs = setupTabs;
-setupTabs = function() {
-    originalSetupTabs();
-
-    // Also handle pod tab switching to load waiting pods
-    const podTab = document.querySelector('[data-tab="pods"]');
-    if (podTab) {
-        podTab.addEventListener('click', () => {
-            setTimeout(loadWaitingPods, 200);
-            populatePodExams();
-        });
-    }
-};
-
 // ─── INIT ───
 async function init() {
     await checkAuth();

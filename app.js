@@ -1145,60 +1145,81 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         updateUIForLoggedOutUser();
     }
 });
-// ─── LEADERBOARD ───
+// ─── LEADERBOARD (DOUBLE-SAFE) ───
 async function loadLeaderboard() {
     const container = document.getElementById('leaderboardContainer');
     if (!container) return;
 
-    // Only fetch users with reputation > 0, order by reputation descending
     const { data, error } = await supabaseClient
         .from('profiles')
         .select('full_name, reputation, avatar_url, karma')
-        .gt('reputation', 0)  // ⬅️ Only show users with reputation > 0
+        .gt('reputation', 0)  // Database filter
         .order('reputation', { ascending: false })
-        .limit(10);  // ⬅️ Show top 10 only
+        .limit(10);
 
     if (error) {
         console.error('Error loading leaderboard:', error);
         container.innerHTML = `
-            <div class="loading-state" style="grid-column:1/-1;">
-                <p>Failed to load leaderboard. Please try again.</p>
+            <div class="leaderboard-empty">
+                <span class="empty-icon">⚠️</span>
+                <p>Failed to load leaderboard.</p>
             </div>
         `;
         return;
     }
 
-    if (!data || data.length === 0) {
+    // 🔥 DOUBLE SAFETY: Filter out ANY user with reputation <= 0 in JavaScript
+    const filteredData = (data || []).filter(user => (user.reputation || 0) > 0);
+
+    if (filteredData.length === 0) {
         container.innerHTML = `
-            <div class="loading-state" style="grid-column:1/-1;">
-                <span style="font-size:3rem;display:block;">🚀</span>
-                <p>No contributors yet! Be the first to share a resource and get featured here.</p>
+            <div class="leaderboard-empty">
+                <span class="empty-icon">🚀</span>
+                <p style="font-size:1.1rem;font-weight:600;color:var(--text-primary);">No contributors yet!</p>
+                <p style="font-size:0.9rem;">Be the first to share a resource and get featured here.</p>
             </div>
         `;
         return;
     }
 
-    container.innerHTML = data.map((user, index) => {
-        let rankBadge = 'normal';
-        let rankEmoji = '#';
-        if (index === 0) { rankBadge = 'gold'; rankEmoji = '🥇'; }
-        else if (index === 1) { rankBadge = 'silver'; rankEmoji = '🥈'; }
-        else if (index === 2) { rankBadge = 'bronze'; rankEmoji = '🥉'; }
-        else { rankEmoji = `#${index + 1}`; }
-        
+    container.innerHTML = filteredData.map((user, index) => {
+        let rankClass = '';
+        let rankEmoji = '';
+        let topTag = '';
+        let topTagClass = 'top-tag hidden';
+
+        if (index === 0) { 
+            rankClass = 'rank-1'; 
+            rankEmoji = '👑'; 
+            topTag = '🏆 #1 Contributor';
+            topTagClass = 'top-tag';
+        } else if (index === 1) { 
+            rankClass = 'rank-2'; 
+            rankEmoji = '🥈'; 
+            topTag = '🥈 #2';
+            topTagClass = 'top-tag';
+        } else if (index === 2) { 
+            rankClass = 'rank-3'; 
+            rankEmoji = '🥉'; 
+            topTag = '🥉 #3';
+            topTagClass = 'top-tag';
+        } else {
+            rankEmoji = `<span class="rank-number">#${index + 1}</span>`;
+        }
+
         const badge = getBadge(user.reputation || 0);
-        const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}&size=72&background=f5c542&color=0b0e1a`;
         const displayName = user.full_name || 'Anonymous';
+        const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&size=72&background=f5c542&color=0b0e1a&bold=true`;
         const rep = user.reputation || 0;
         const karma = user.karma || 0;
-        
+
         return `
-            <div class="leaderboard-card">
-                <div class="rank-badge ${rankBadge}">${rankEmoji}</div>
-                <img class="leaderboard-avatar" src="${avatar}" alt="${displayName}" />
+            <div class="leaderboard-card ${rankClass}">
+                <div class="rank-badge">${rankEmoji}</div>
+                <img class="leaderboard-avatar" src="${avatar}" alt="${displayName}" loading="lazy" />
                 <div class="leaderboard-name">${displayName}</div>
                 <div class="leaderboard-badge">${badge}</div>
-                ${index < 3 ? `<span class="top-badge">🌟 Top ${index + 1}</span>` : ''}
+                <span class="${topTagClass}">${topTag}</span>
                 <div class="leaderboard-stats">
                     <div class="stat-item">
                         <span class="stat-number">${rep}</span>

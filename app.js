@@ -1038,7 +1038,7 @@ const affiliateLink = document.getElementById('affiliateLink').value.trim();
                 exam_id: examId,
                 link,
                 description,
-                user_id: currentUser.id
+                user_id: currentUser.id,
                 resource_type: resourceType,        // ⬅️ NEW
                 affiliate_link: affiliateLink || null  // ⬅️ NEW
             });

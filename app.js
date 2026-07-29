@@ -1270,13 +1270,32 @@ async function loadLeaderboard() {
         `;
     }).join('');
 }
+// ─── SMART SEARCH PLACEHOLDER ───
+async function setSmartPlaceholder() {
+    const input = document.getElementById('searchInput');
+    if (!input) return;
 
+    // Fetch top 3 most popular exams
+    const { data } = await supabaseClient
+        .from('resources')
+        .select('exam_id, exams(name)')
+        .not('exam_id', 'is', null)
+        .limit(3);
+    
+    if (data && data.length > 0) {
+        const examNames = data.map(r => r.exams?.name).filter(Boolean);
+        if (examNames.length > 0) {
+            input.placeholder = `🔍 Search for ${examNames.join(', ')}...`;
+        }
+    }
+}
 // ─── INIT ───
 async function init() {
     await checkAuth();
     await loadExams();
     await loadResources(true);
     await loadLeaderboard();
+    await setSmartPlaceholder(); // ⬅️ DON'T FORGET TO ADD THIS LINE INSIDE init()
     applyTranslations();
     setupSectorFilters();
     setupTabs(); // ⬅️ ADD THIS LINE

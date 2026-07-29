@@ -1145,13 +1145,55 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         updateUIForLoggedOutUser();
     }
 });
+// ─── LEADERBOARD ───
+async function loadLeaderboard() {
+    const container = document.getElementById('leaderboardContainer');
+    if (!container) return;
 
+    const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('full_name, reputation, avatar_url')
+        .order('reputation', { ascending: false })
+        .limit(5);
+
+    if (error) {
+        console.error('Error loading leaderboard:', error);
+        container.innerHTML = '<p class="loading-state" style="padding:10px 0;">Failed to load leaderboard.</p>';
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        container.innerHTML = '<p class="loading-state" style="padding:10px 0;">Be the first contributor! 🚀</p>';
+        return;
+    }
+
+    container.innerHTML = data.map((user, index) => {
+        let rankClass = 'rank';
+        if (index === 0) rankClass += ' gold';
+        else if (index === 1) rankClass += ' silver';
+        else if (index === 2) rankClass += ' bronze';
+        
+        const badge = getBadge(user.reputation || 0);
+        const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}`;
+        
+        return `
+            <div class="leaderboard-item">
+                <span class="${rankClass}">#${index + 1}</span>
+                <img src="${avatar}" alt="${user.full_name || 'User'}" />
+                <span class="leaderboard-name">${user.full_name || 'Anonymous'}</span>
+                <span class="leaderboard-badge">${badge}</span>
+                <span class="leaderboard-xp">${user.reputation || 0} XP</span>
+            </div>
+        `;
+    }).join('');
+}
 // ─── INIT ───
 
 async function init() {
     await checkAuth();
     await loadExams();
     await loadResources(true);
+     await loadLeaderboard(); // ⬅️ ADD THIS LINE
      applyTranslations(); // ⬅️ ADD THIS LINE
     setupSectorFilters(); // <-- ADD THIS LINE
 }

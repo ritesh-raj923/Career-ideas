@@ -1346,6 +1346,622 @@ function switchTab(tabName) {
     if (tabName === 'resources') loadResources(true);
     if (tabName === 'leaderboard') loadLeaderboard();
 }
+// ─── STUDY PODS ───
+let currentRoomId = null;
+let currentPodExamId = null;
+let podTimerInterval = null;
+let podTimeLeft = 2700; // 45 minutes in seconds
+
+// Populate Exam dropdown in Pod Creator
+async function populatePodExams() {
+    const select = document.getElementById('podExam');
+    if (!select) return;
+
+    const { data, error } = await supabaseClient
+        .from('exams')
+        .select('id, name')
+        .order('name');
+
+    if (error) {
+        console.error('Error loading exams for pods:', error);
+        return;
+    }
+
+    select.innerHTML = '<option value="">Select an exam</option>' +
+        data.map(exam => `<option value="${exam.id}">${exam.name}</option>`).join('');
+}
+
+// Create a new Study Pod
+async function createPod() {
+    const user = await supabaseClient.auth.getUser();
+    if (!user.data.user) {
+        alert('Please login first to start a pod.');
+        return;
+    }
+
+    const examId = document.getElementById('podExam').value;
+    const topic = document.getElementById('podTopic').value.trim();
+    const maxPeople = parseInt(document.querySelector('.pod-mode-btn.active')?.dataset.mode || '4');
+    const userId = user.data.user.id;
+
+    if (!examId) {
+        alert('Please select an exam.');
+        return;
+    }
+
+    // Generate a unique room code
+    const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    // Insert the room
+    const { data: roomData, error: roomError } = await supabaseClient
+        .from('study_rooms')
+        .insert({
+            room_code: roomCode,
+            host_id: userId,
+            exam_id: parseInt(examId),
+            topic: topic || null,
+            max_people: maxPeople,
+            current_people: 1,
+            status: 'waiting'
+        })
+        .select()
+        .single();
+
+    if (roomError) {
+        console.error('Error creating pod:', roomError);
+        alert('Failed to create pod. Please try again.');
+        return;
+    }
+
+    // Add the host as a participant
+    await supabaseClient
+        .from('room_participants')
+        .insert({
+            room_id: roomData.id,
+            user_id: userId,
+            is_host: true,
+            is_ready: true
+        });
+
+    alert(`✅ Pod created! Share this code: ${roomCode}`);
+    enterPodRoom(roomData.id);
+}
+
+// Join an existing pod using a code
+async function joinPodByCode() {
+    const code = prompt('Enter the 6-digit Pod Code:');
+    if (!code) return;
+
+    const { data, error } = await supabaseClient
+        .from('study_rooms')
+        .select('*')
+        .eq('room_code', code.toUpperCase())
+        .eq('status', 'waiting')
+        .single();
+
+    if (error || !data) {
+        alert('❌ Invalid or expired pod code. Please check and try again.');
+        return;
+    }
+
+    enterPodRoom(data.id);
+}
+
+// Enter the Pod Room (UI switch)
+async function enterPodRoom(roomId) {
+    const user = await supabaseClient.auth.getUser();
+    if (!user.data.user) return;
+
+    currentRoomId = roomId;
+
+    // Get room details
+    const { data: room, error } = await supabaseClient
+        .from('study_rooms')
+        .select('*, exams(name)')
+        .eq('id', roomId)
+        .single();
+
+    if (error) {
+        console.error('Error fetching room:', error);
+        return;
+    }
+
+    // Add current user as participant if not already
+    const { data: existing } = await supabaseClient
+        .from('room_participants')
+        .select('*')
+        .eq('room_id', roomId)
+        .eq('user_id', user.data.user.id)
+        .single();
+
+    if (!existing) {
+        await supabaseClient
+            .from('room_participants')
+            .insert({
+                room_id: roomId,
+                user_id: user.data.user.id,
+                is_host: false,
+                is_ready: true
+            });
+
+        // Increment current_people
+        await supabaseClient
+            .from('study_rooms')
+            .update({ current_people: room.current_people + 1 })
+            .eq('id', roomId);
+    }
+
+    // Store exam ID for resource loading
+    currentPodExamId = room.exam_id;
+
+    // Show the pod room, hide main content
+    document.getElementById('podRoom').style.display = 'flex';
+    document.querySelector('.tab-content.active')?.classList.remove('active');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+    // Set room title
+    document.getElementById('podRoomTitle').textContent = `📚 ${room.exams?.name || 'Study'} Pod`;
+
+    // Load resources for this exam
+    loadPodResources();
+
+    // Load participants
+    loadPodParticipants(roomId);
+
+    // Load existing chat messages
+    loadPodChat(roomId);
+
+    // Listen for real-time updates (URL, participants, chat)
+    listenToPodChanges(roomId);
+
+    // Start timer
+    startPodTimer();
+
+    // Update the URL input and iframe if there's a shared URL
+    if (room.shared_url) {
+        document.getElementById('sharedIframe').src = room.shared_url;
+        document.getElementById('sharedUrlInput').value = room.shared_url;
+    }
+
+    // Subscribe to presence
+    subscribeToPodPresence(roomId);
+}
+
+// Load resources for the pod's exam
+async function loadPodResources() {
+    const container = document.getElementById('podResourceList');
+    if (!container || !currentPodExamId) return;
+
+    const { data, error } = await supabaseClient
+        .from('resources')
+        .select('id, title, link')
+        .eq('exam_id', currentPodExamId)
+        .limit(10);
+
+    if (error || !data || data.length === 0) {
+        container.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted);">No resources available for this exam.</span>';
+        return;
+    }
+
+    container.innerHTML = data.map(resource => `
+        <button onclick="loadResourceToPod(${resource.id})" style="background:var(--bg-card); border:1px solid rgba(255,255,255,0.06); color:var(--text-secondary); padding:4px 14px; border-radius:100px; font-size:0.7rem; cursor:pointer; white-space:nowrap; transition:var(--transition);">
+            📄 ${resource.title.substring(0, 20)}${resource.title.length > 20 ? '...' : ''}
+        </button>
+    `).join('');
+}
+
+// Load a resource into the shared browser
+async function loadResourceToPod(resourceId) {
+    const { data, error } = await supabaseClient
+        .from('resources')
+        .select('link')
+        .eq('id', resourceId)
+        .single();
+
+    if (data) {
+        document.getElementById('sharedUrlInput').value = data.link;
+        loadSharedUrl(data.link);
+    }
+}
+
+// Load shared URL into iframe and broadcast to everyone
+async function loadSharedUrl(url) {
+    if (!currentRoomId) return;
+
+    let embedUrl = url;
+    if (url.includes('youtube.com/watch') || url.includes('youtu.be')) {
+        const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
+        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
+    }
+
+    const { error } = await supabaseClient
+        .from('study_rooms')
+        .update({
+            shared_url: embedUrl,
+            shared_url_updated_at: new Date().toISOString()
+        })
+        .eq('id', currentRoomId);
+
+    if (error) console.error('Error loading shared URL:', error);
+}
+
+// Listen for real-time changes in the pod
+function listenToPodChanges(roomId) {
+    // URL changes
+    supabaseClient
+        .channel('pod-url-' + roomId)
+        .on(
+            'postgres_changes',
+            {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'study_rooms',
+                filter: `id=eq.${roomId}`
+            },
+            (payload) => {
+                if (payload.new.shared_url) {
+                    const iframe = document.getElementById('sharedIframe');
+                    if (iframe && iframe.src !== payload.new.shared_url) {
+                        iframe.src = payload.new.shared_url;
+                        document.getElementById('sharedUrlInput').value = payload.new.shared_url;
+                    }
+                }
+            }
+        )
+        .subscribe();
+
+    // Participants changes
+    supabaseClient
+        .channel('pod-participants-' + roomId)
+        .on(
+            'postgres_changes',
+            {
+                event: '*',
+                schema: 'public',
+                table: 'room_participants',
+                filter: `room_id=eq.${roomId}`
+            },
+            () => {
+                loadPodParticipants(roomId);
+            }
+        )
+        .subscribe();
+
+    // Chat messages
+    supabaseClient
+        .channel('pod-chat-' + roomId)
+        .on(
+            'postgres_changes',
+            {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'pod_chat_messages',
+                filter: `room_id=eq.${roomId}`
+            },
+            (payload) => {
+                displayChatMessage(payload.new);
+            }
+        )
+        .subscribe();
+}
+
+// Load participants
+async function loadPodParticipants(roomId) {
+    const container = document.getElementById('podParticipantsList');
+    if (!container) return;
+
+    const { data, error } = await supabaseClient
+        .from('room_participants')
+        .select('user_id, is_host, profiles(full_name, avatar_url)')
+        .eq('room_id', roomId);
+
+    if (error || !data) return;
+
+    container.innerHTML = data.map(p => `
+        <div style="display:flex; align-items:center; gap:8px; padding:4px 8px; background:var(--bg-card); border-radius:6px;">
+            <img src="${p.profiles?.avatar_url || 'https://ui-avatars.com/api/?name=' + (p.profiles?.full_name || 'User')}" style="width:24px; height:24px; border-radius:50%;" />
+            <span style="font-size:0.85rem;">${p.profiles?.full_name || 'Anonymous'} ${p.is_host ? '👑' : ''}</span>
+        </div>
+    `).join('');
+
+    // Update count
+    document.getElementById('podPeopleCount').textContent = `👥 ${data.length}/${data.length}`;
+}
+
+// Send chat message
+async function sendPodMessage() {
+    const input = document.getElementById('podChatInput');
+    const message = input.value.trim();
+    if (!message || !currentRoomId) return;
+
+    const user = await supabaseClient.auth.getUser();
+    if (!user.data.user) return;
+
+    await supabaseClient
+        .from('pod_chat_messages')
+        .insert({
+            room_id: currentRoomId,
+            user_id: user.data.user.id,
+            message: message
+        });
+
+    input.value = '';
+}
+
+// Display chat message
+function displayChatMessage(msg) {
+    const container = document.getElementById('podChatMessages');
+    if (!container) return;
+
+    const div = document.createElement('div');
+    div.style.cssText = 'padding:4px 8px; background:var(--bg-card); border-radius:4px;';
+    div.innerHTML = `<strong style="color:var(--gold);">${msg.profiles?.full_name || 'Anonymous'}:</strong> ${msg.message}`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+// Load existing chat messages
+async function loadPodChat(roomId) {
+    const container = document.getElementById('podChatMessages');
+    if (!container) return;
+
+    const { data, error } = await supabaseClient
+        .from('pod_chat_messages')
+        .select('*, profiles(full_name)')
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: true });
+
+    if (error || !data) return;
+
+    container.innerHTML = '';
+    data.forEach(msg => displayChatMessage(msg));
+}
+
+// Start the 45-minute timer
+function startPodTimer() {
+    if (podTimerInterval) clearInterval(podTimerInterval);
+    podTimeLeft = 2700;
+    updateTimerDisplay();
+
+    podTimerInterval = setInterval(() => {
+        podTimeLeft--;
+        updateTimerDisplay();
+
+        if (podTimeLeft <= 0) {
+            clearInterval(podTimerInterval);
+            alert('⏰ Time is up! Great job studying!');
+        }
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    const mins = Math.floor(podTimeLeft / 60);
+    const secs = podTimeLeft % 60;
+    document.getElementById('podTimerDisplay').textContent =
+        `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+// Leave pod
+async function leavePod() {
+    if (!currentRoomId) return;
+
+    if (!confirm('Are you sure you want to leave the pod?')) return;
+
+    const user = await supabaseClient.auth.getUser();
+    if (user.data.user) {
+        await supabaseClient
+            .from('room_participants')
+            .update({ left_at: new Date().toISOString() })
+            .eq('room_id', currentRoomId)
+            .eq('user_id', user.data.user.id);
+
+        await supabaseClient
+            .from('study_rooms')
+            .update({ current_people: supabaseClient.sql`current_people - 1` })
+            .eq('id', currentRoomId);
+    }
+
+    // Close the pod room
+    document.getElementById('podRoom').style.display = 'none';
+    if (podTimerInterval) clearInterval(podTimerInterval);
+    currentRoomId = null;
+
+    // Show the Study Pods tab again
+    document.querySelector('[data-tab="pods"]')?.click();
+    location.reload(); // Reload to reset everything
+}
+
+// Subscribe to presence (optional: shows who is online)
+function subscribeToPodPresence(roomId) {
+    // This is a placeholder for future presence features
+    console.log('Subscribed to presence for room:', roomId);
+}
+
+// Load waiting pods
+async function loadWaitingPods() {
+    const container = document.getElementById('waitingPodsContainer');
+    if (!container) return;
+
+    const { data, error } = await supabaseClient
+        .from('study_rooms')
+        .select('*, exams(name), profiles(full_name)')
+        .eq('status', 'waiting')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+    if (error || !data || data.length === 0) {
+        container.innerHTML = `
+            <div class="loading-state" style="padding:20px 0;">
+                <span style="font-size:2rem;display:block;">🤝</span>
+                <p>No active pods right now. Create one!</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = data.map(room => `
+        <div class="waiting-pod-item" style="background:var(--bg-card); border-radius:var(--radius-sm); padding:16px 20px; margin-bottom:12px; border:1px solid rgba(255,255,255,0.04); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+                <h4 style="margin:0;">${room.exams?.name || 'Unknown Exam'}</h4>
+                <span style="font-size:0.8rem; color:var(--text-muted);">${room.topic || 'General'}</span>
+                <span style="font-size:0.75rem; color:var(--text-muted); display:block;">👥 ${room.current_people}/${room.max_people}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:0.7rem; background:var(--gold-dim); padding:2px 10px; border-radius:100px; color:var(--gold);">Code: ${room.room_code}</span>
+                <button onclick="joinPodByCode()" class="btn-primary" style="padding:6px 18px; font-size:0.8rem;">Join</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ─── POD EVENT LISTENERS ───
+document.addEventListener('DOMContentLoaded', () => {
+    // Start Pod button
+    document.getElementById('startPodBtn')?.addEventListener('click', createPod);
+
+    // Load URL button
+    document.getElementById('loadUrlBtn')?.addEventListener('click', () => {
+        const url = document.getElementById('sharedUrlInput').value.trim();
+        if (url) loadSharedUrl(url);
+    });
+
+    // Enter key on URL input
+    document.getElementById('sharedUrlInput')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('loadUrlBtn').click();
+    });
+
+    // Leave pod button
+    document.getElementById('leavePodBtn')?.addEventListener('click', leavePod);
+
+    // Chat send button
+    document.getElementById('podChatSendBtn')?.addEventListener('click', sendPodMessage);
+
+    // Enter key on chat input
+    document.getElementById('podChatInput')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') sendPodMessage();
+    });
+
+    // Viewer tabs (Browser vs Whiteboard)
+    document.querySelectorAll('.viewer-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.viewer-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            const view = tab.dataset.view;
+            document.getElementById('sharedBrowser').style.display = view === 'browser' ? 'flex' : 'none';
+            document.getElementById('whiteboardPanel').style.display = view === 'whiteboard' ? 'flex' : 'none';
+        });
+    });
+
+    // Pod mode buttons (Solo, Duo, Standard, Large)
+    document.querySelectorAll('.pod-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.pod-mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+
+    // Whiteboard tools
+    let currentTool = 'pen';
+    let currentColor = '#f5c542';
+    let isDrawing = false;
+    let lastX = 0,
+        lastY = 0;
+
+    const canvas = document.getElementById('whiteboardCanvas');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width - 4;
+            canvas.height = rect.height - 4;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            lastX = e.clientX - rect.left;
+            lastY = e.clientY - rect.top;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+
+            lastX = x;
+            lastY = y;
+        });
+
+        canvas.addEventListener('mouseup', () => { isDrawing = false; });
+        canvas.addEventListener('mouseleave', () => { isDrawing = false; });
+
+        document.querySelectorAll('.wb-tool').forEach(toolBtn => {
+            toolBtn.addEventListener('click', () => {
+                document.querySelectorAll('.wb-tool').forEach(t => t.classList.remove('active'));
+                toolBtn.classList.add('active');
+                currentTool = toolBtn.dataset.tool;
+
+                if (currentTool === 'eraser') {
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 20;
+                } else if (currentTool === 'clear') {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    // Reset tool back to pen after clear
+                    document.querySelector('.wb-tool[data-tool="pen"]')?.click();
+                } else {
+                    ctx.strokeStyle = document.getElementById('wbColor').value;
+                    ctx.lineWidth = 3;
+                }
+            });
+        });
+
+        document.getElementById('wbColor')?.addEventListener('input', (e) => {
+            currentColor = e.target.value;
+            if (currentTool === 'pen') {
+                ctx.strokeStyle = currentColor;
+            }
+        });
+    }
+});
+
+// ─── ADD TAB SWITCHER FOR PODS ───
+// Update the setupTabs function to include pods
+const originalSetupTabs = setupTabs;
+setupTabs = function() {
+    originalSetupTabs();
+
+    // Also handle pod tab switching to load waiting pods
+    const podTab = document.querySelector('[data-tab="pods"]');
+    if (podTab) {
+        podTab.addEventListener('click', () => {
+            setTimeout(loadWaitingPods, 200);
+            populatePodExams();
+        });
+    }
+};
+
+// ─── UPDATE INIT TO POPULATE POD EXAMS ───
+const originalInit = init;
+init = async function() {
+    await originalInit();
+    await populatePodExams();
+    await loadWaitingPods();
+};
 // ─── INIT ───
 async function init() {
     await checkAuth();

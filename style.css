@@ -1526,3 +1526,102 @@ footer {
         font-size: 0.5rem;
     }
 }
+/* ─── TAB NAVIGATION ─── */
+.tab-navigation {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 4px 0;
+    position: sticky;
+    top: 68px; /* Height of navbar */
+    z-index: 500;
+    backdrop-filter: blur(8px);
+}
+
+.tab-navigation .container {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 10px 24px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 100px;
+    transition: var(--transition);
+    font-family: inherit;
+    position: relative;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.tab-btn.active {
+    color: var(--gold);
+    background: var(--gold-dim);
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 20%;
+    right: 20%;
+    height: 2px;
+    background: var(--gold);
+    border-radius: 4px;
+}
+
+/* ─── TAB CONTENT ─── */
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Remove duplicate section padding when inside tabs */
+.tab-content section {
+    padding-top: 40px;
+    padding-bottom: 60px;
+}
+
+/* Sticky Resource Filters */
+.resources-controls {
+    position: sticky;
+    top: 120px;
+    z-index: 100;
+    background: var(--bg-primary);
+    padding: 12px 0;
+    margin-top: 0;
+}
+
+@media (max-width: 768px) {
+    .tab-navigation {
+        top: 60px;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: none;
+    }
+    .tab-navigation::-webkit-scrollbar {
+        display: none;
+    }
+    .tab-btn {
+        font-size: 0.8rem;
+        padding: 8px 16px;
+        flex-shrink: 0;
+    }
+}

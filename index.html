@@ -107,48 +107,62 @@
             </div>
         </div>
     </section>
-  
-    <!-- ====== EXAMS SECTION ====== -->
+    <!-- ====== TAB NAVIGATION ====== -->
+<div class="tab-navigation">
+    <div class="container">
+        <button class="tab-btn active" data-tab="exams">📚 Exams</button>
+        <button class="tab-btn" data-tab="leaderboard">🏆 Leaderboard</button>
+        <button class="tab-btn" data-tab="resources">📖 Resources</button>
+    </div>
+</div>
+ <!-- TAB 1: EXAMS -->
+<div class="tab-content active" id="tab-exams">
     <section class="exams-section" id="exams">
         <div class="container">
             <span class="section-label" data-i18n="examsLabel">📋 Categories</span>
             <h2 class="section-title" data-i18n="examsTitle">Browse by <span class="highlight">Exam</span></h2>
             <p class="section-desc" data-i18n="examsDesc">Select an exam to see all resources shared by the community.</p>
-            <!-- ⬇️⬇️⬇️ PASTE IT HERE ⬇️⬇️⬇️ -->
-<div class="exam-sector-filters">
-    <button class="sector-filter-btn active" data-sector="all">All</button>
-    <button class="sector-filter-btn" data-sector="Foundation">🏫 Foundation</button>
-    <button class="sector-filter-btn" data-sector="Engineering">🔬 Engineering</button>
-    <button class="sector-filter-btn" data-sector="Medical">🩺 Medical</button>
-    <button class="sector-filter-btn" data-sector="Government Jobs">🏛️ Government Jobs</button>
-    <button class="sector-filter-btn" data-sector="Management">💼 Management</button>
-    <button class="sector-filter-btn" data-sector="Law">⚖️ Law</button>
-    <button class="sector-filter-btn" data-sector="Design">🎨 Design</button>
-</div>
-<!-- ⬆️⬆️⬆️ PASTE IT HERE ⬆️⬆️⬆️ -->
+            
+            <!-- Sector Filters -->
+            <div class="exam-sector-filters">
+                <button class="sector-filter-btn active" data-sector="all">All</button>
+                <button class="sector-filter-btn" data-sector="Foundation">🏫 Foundation</button>
+                <button class="sector-filter-btn" data-sector="Engineering">🔬 Engineering</button>
+                <button class="sector-filter-btn" data-sector="Medical">🩺 Medical</button>
+                <button class="sector-filter-btn" data-sector="Government Jobs">🏛️ Government Jobs</button>
+                <button class="sector-filter-btn" data-sector="Management">💼 Management</button>
+                <button class="sector-filter-btn" data-sector="Law">⚖️ Law</button>
+                <button class="sector-filter-btn" data-sector="Design">🎨 Design</button>
+            </div>
+            
             <div class="exams-grid" id="examsGrid">
                 <!-- Dynamically loaded from Supabase -->
             </div>
         </div>
     </section>
-   <!-- ====== LEADERBOARD SECTION ====== -->
-<section class="leaderboard-section" id="leaderboard">
-    <div class="container">
-        <div class="leaderboard-header">
-            <span class="section-label">🏆 Top Contributors</span>
-            <h2 class="section-title">Most Helpful <span class="highlight">Mentors</span></h2>
-            <p class="section-desc">These amazing students have helped the most people by sharing quality study materials.</p>
-        </div>
-        
-        <div class="leaderboard-grid" id="leaderboardContainer">
-            <div class="loading-state">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>Loading top contributors...</p>
+</div>
+
+<!-- TAB 2: LEADERBOARD -->
+<div class="tab-content" id="tab-leaderboard">
+    <section class="leaderboard-section" id="leaderboard">
+        <div class="container">
+            <div class="leaderboard-header">
+                <span class="section-label">🏆 Top Contributors</span>
+                <h2 class="section-title">Most Helpful <span class="highlight">Mentors</span></h2>
+                <p class="section-desc">These amazing students have helped the most people by sharing quality study materials.</p>
+            </div>
+            <div class="leaderboard-grid" id="leaderboardContainer">
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading top contributors...</p>
+                </div>
             </div>
         </div>
-    </div>
-</section>
-    <!-- ====== RESOURCES SECTION ====== -->
+    </section>
+</div>
+
+<!-- TAB 3: RESOURCES -->
+<div class="tab-content" id="tab-resources">
     <section class="resources-section" id="resources">
         <div class="container">
             <div class="resources-header">
@@ -178,6 +192,8 @@
             </div>
         </div>
     </section>
+</div>
+
 
     <!-- ====== ADD RESOURCE MODAL ====== -->
     <div class="modal" id="addResourceModal">

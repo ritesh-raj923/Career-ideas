@@ -1302,6 +1302,50 @@ async function setSmartPlaceholder() {
         }
     }
 }
+// ─── RECENT RESOURCES (Home Tab) ───
+async function loadRecentResources() {
+    const container = document.getElementById('recentResourcesContainer');
+    if (!container) return;
+
+    const { data, error } = await supabaseClient
+        .from('resources')
+        .select(`
+            *,
+            profiles (full_name),
+            exams (name, icon)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+    if (error || !data || data.length === 0) {
+        container.innerHTML = `
+            <div class="recent-resource-item" style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:30px 20px;">
+                📭 No resources yet. Be the first to share!
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = data.map(resource => `
+        <div class="recent-resource-item" onclick="switchTab('resources')">
+            <div class="recent-exam">${resource.exams?.icon || '📚'} ${resource.exams?.name || 'General'}</div>
+            <div class="recent-title-text">${resource.title}</div>
+            <div class="recent-user">👤 ${resource.profiles?.full_name || 'Anonymous'} • ${new Date(resource.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+        </div>
+    `).join('');
+}
+
+// ─── SWITCH TAB HELPER ───
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === `tab-${tabName}`);
+    });
+    if (tabName === 'resources') loadResources(true);
+    if (tabName === 'leaderboard') loadLeaderboard();
+}
 // ─── INIT ───
 async function init() {
     await checkAuth();

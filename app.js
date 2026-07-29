@@ -589,7 +589,6 @@ async function loadResources(reset = true) {
         updateStats();
     }
 }
-
 function createResourceCard(resource) {
     const card = document.createElement('div');
     card.className = 'resource-card';
@@ -610,9 +609,30 @@ function createResourceCard(resource) {
         </div>
         <h4>${resource.title}</h4>
         <div class="resource-description">${resource.description || t('noDesc')}</div>
-<a href="${resource.link}" target="_blank" class="resource-link">
-    <i class="fas fa-external-link-alt"></i> ${t('openResource')}
-</a>
+        
+        <!-- ====== APP / WEB LINK ====== -->
+        ${resource.resource_type === 'app' ? `
+            <a href="${resource.link}" target="_blank" class="resource-app-link">
+                📱 Download App
+                <span class="app-store-badge">Available on Store</span>
+            </a>
+        ` : `
+            <a href="${resource.link}" target="_blank" class="resource-link">
+                <i class="fas fa-external-link-alt"></i> ${t('openResource')}
+            </a>
+        `}
+        
+        <!-- ====== AFFILIATE LINK (BOOK PURCHASE) ====== -->
+        ${resource.affiliate_link ? `
+            <div class="resource-affiliate-section">
+                <a href="${resource.affiliate_link}" target="_blank" class="resource-affiliate-link" rel="nofollow sponsored">
+                    <i class="fas fa-shopping-cart"></i> 📖 Buy Recommended Book
+                    <span class="affiliate-badge">💰 Supports uploader</span>
+                </a>
+                <small class="affiliate-disclaimer">Affiliate Link: You pay the same price, uploader gets a commission.</small>
+            </div>
+        ` : ''}
+        
         <div class="resource-footer">
             <div class="vote-buttons">
                 <button onclick="voteResource(${resource.id}, 1)" class="${upvoted ? 'voted-up' : ''}">
@@ -629,7 +649,7 @@ function createResourceCard(resource) {
                 </button>
                 <div class="resource-user">
                     <img src="${avatarUrl}" alt="${userName}" />
-                   <span>${getBadge(resource.profiles?.reputation || 0)} ${userName}</span>
+                    <span>${getBadge(resource.profiles?.reputation || 0)} ${userName}</span>
                 </div>
             </div>
         </div>
@@ -638,7 +658,6 @@ function createResourceCard(resource) {
     loadCommentCount(resource.id);
     return card;
 }
-
 function hasUserVoted(resourceId, voteType) {
     const key = `${resourceId}-${voteType}`;
     return !!userVotes[key];

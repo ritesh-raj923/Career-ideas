@@ -1150,6 +1150,7 @@ async function loadLeaderboard() {
     const container = document.getElementById('leaderboardContainer');
     if (!container) return;
 
+    // Only fetch users with reputation > 0, sorted descending, limit to 10
     const { data, error } = await supabaseClient
         .from('profiles')
         .select('full_name, reputation, avatar_url, karma')
@@ -1168,7 +1169,7 @@ async function loadLeaderboard() {
         return;
     }
 
-    // 🔥 DOUBLE SAFETY: Filter out ANY user with reputation <= 0 in JavaScript
+    // Double safety: filter out any user with reputation <= 0
     const filteredData = (data || []).filter(user => (user.reputation || 0) > 0);
 
     if (filteredData.length === 0) {
@@ -1234,62 +1235,28 @@ async function loadLeaderboard() {
         `;
     }).join('');
 }
-// ─── INIT ───
 
+// ─── INIT ───
 async function init() {
     await checkAuth();
     await loadExams();
     await loadResources(true);
-     await loadLeaderboard(); // ⬅️ ADD THIS LINE
-     applyTranslations(); // ⬅️ ADD THIS LINE
-    setupSectorFilters(); // <-- ADD THIS LINE
+    await loadLeaderboard();
+    applyTranslations();
+    setupSectorFilters();
 }
-// ─── LANGUAGE SWITCHER ───
-const langSwitcher = document.getElementById('langSwitcher');
-if (langSwitcher) {
-    langSwitcher.value = currentLang;
-    langSwitcher.addEventListener('change', (e) => {
-        setLanguage(e.target.value);
-        // Reload resources to refresh the card text (like "Open Resource")
-        loadResources(true);
-    });
-}
-// ─── LEADERBOARD ───
-async function loadLeaderboard() {
-    const container = document.getElementById('leaderboardContainer');
-    if (!container) return;
 
-    const { data, error } = await supabaseClient
-        .from('profiles')
-        .select('full_name, reputation, avatar_url')
-        .order('reputation', { ascending: false })
-        .limit(5);
-
-    if (error) {
-        console.error('Error loading leaderboard:', error);
-        container.innerHTML = '<p class="loading-state">Failed to load leaderboard.</p>';
-        return;
+// ─── LANGUAGE SWITCHER (must be called after DOM loads) ───
+document.addEventListener('DOMContentLoaded', () => {
+    const langSwitcher = document.getElementById('langSwitcher');
+    if (langSwitcher) {
+        langSwitcher.value = currentLang;
+        langSwitcher.addEventListener('change', (e) => {
+            setLanguage(e.target.value);
+            loadResources(true);
+        });
     }
+});
 
-    if (!data || data.length === 0) {
-        container.innerHTML = '<p class="loading-state" style="padding:10px 0;">Be the first contributor! 🚀</p>';
-        return;
-    }
-
-    container.innerHTML = data.map((user, index) => {
-        const rankClass = index === 0 ? 'rank gold' : 'rank';
-        const badge = getBadge(user.reputation || 0);
-        const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}`;
-        
-        return `
-            <div class="leaderboard-item">
-                <span class="${rankClass}">#${index + 1}</span>
-                <img src="${avatar}" alt="${user.full_name || 'User'}" />
-                <span class="leaderboard-name">${user.full_name || 'Anonymous'}</span>
-                <span class="leaderboard-badge">${badge}</span>
-                <span class="leaderboard-xp">${user.reputation || 0} XP</span>
-            </div>
-        `;
-    }).join('');
-}
+// ─── START THE APP ───
 init();

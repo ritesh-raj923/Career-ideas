@@ -162,6 +162,14 @@ const translations = {
         uploadedBy: 'अज्ञात'
     }
 };
+function getBadge(reputation) {
+    if (reputation >= 500) return '🏆';
+    if (reputation >= 200) return '⭐';
+    if (reputation >= 50) return '💪';
+    if (reputation >= 10) return '📚';
+    return '🌱';
+}
+
 // ─── TRANSLATION HELPERS ───
 function t(key) {
     return translations[currentLang]?.[key] || translations.en[key] || key;
@@ -621,7 +629,7 @@ function createResourceCard(resource) {
                 </button>
                 <div class="resource-user">
                     <img src="${avatarUrl}" alt="${userName}" />
-                    <span>${userName}</span>
+                   <span>${getBadge(resource.profiles?.reputation || 0)} ${userName}</span>
                 </div>
             </div>
         </div>
@@ -635,7 +643,6 @@ function hasUserVoted(resourceId, voteType) {
     const key = `${resourceId}-${voteType}`;
     return !!userVotes[key];
 }
-
 async function voteResource(resourceId, voteType) {
     if (!currentUser) {
         alert('Please login to vote.');
@@ -645,6 +652,7 @@ async function voteResource(resourceId, voteType) {
     const existingUp = hasUserVoted(resourceId, 1);
     const existingDown = hasUserVoted(resourceId, -1);
     
+    // Remove existing vote if toggling off
     if ((voteType === 1 && existingUp) || (voteType === -1 && existingDown)) {
         const { error: deleteError } = await supabaseClient
             .from('votes')
@@ -663,6 +671,7 @@ async function voteResource(resourceId, voteType) {
         return;
     }
     
+    // Remove opposite vote if switching
     if ((voteType === 1 && existingDown) || (voteType === -1 && existingUp)) {
         const oppositeVoteType = voteType === 1 ? -1 : 1;
         const { error: deleteError } = await supabaseClient
@@ -679,6 +688,7 @@ async function voteResource(resourceId, voteType) {
         delete userVotes[`${resourceId}-${oppositeVoteType}`];
     }
     
+    // Insert the new vote
     const { error: insertError } = await supabaseClient
         .from('votes')
         .insert({
@@ -693,10 +703,39 @@ async function voteResource(resourceId, voteType) {
         return;
     }
     
+    // ─── 🔥 NEW CODE: UPDATE REPUTATION & KARMA ───
+    // This runs AFTER a successful vote to reward the resource owner
+    try {
+        // Get the resource owner's ID
+        const { data: resourceData } = await supabaseClient
+            .from('resources')
+            .select('user_id')
+            .eq('id', resourceId)
+            .single();
+        
+        if (resourceData) {
+            // Increase the owner's reputation by 2
+            await supabaseClient
+                .from('profiles')
+                .update({ reputation: supabaseClient.sql`reputation + 2` })
+                .eq('id', resourceData.user_id);
+            
+            // Give the resource owner +2 karma for getting an upvote
+            await supabaseClient
+                .from('profiles')
+                .update({ karma: supabaseClient.sql`karma + 2` })
+                .eq('id', resourceData.user_id);
+        }
+    } catch (repError) {
+        console.error('Error updating reputation:', repError);
+    }
+    // ─── END OF NEW CODE ───
+    
     userVotes[`${resourceId}-${voteType}`] = true;
     refreshVoteCount(resourceId);
     updateResourceCardVoteStatus(resourceId);
 }
+
 
 function updateResourceCardVoteStatus(resourceId) {
     const upBtn = document.querySelector(`button[onclick="voteResource(${resourceId}, 1)"]`);
@@ -1125,5 +1164,43 @@ if (langSwitcher) {
         // Reload resources to refresh the card text (like "Open Resource")
         loadResources(true);
     });
+}
+// ─── LEADERBOARD ───
+async function loadLeaderboard() {
+    const container = document.getElementById('leaderboardContainer');
+    if (!container) return;
+
+    const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('full_name, reputation, avatar_url')
+        .order('reputation', { ascending: false })
+        .limit(5);
+
+    if (error) {
+        console.error('Error loading leaderboard:', error);
+        container.innerHTML = '<p class="loading-state">Failed to load leaderboard.</p>';
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        container.innerHTML = '<p class="loading-state" style="padding:10px 0;">Be the first contributor! 🚀</p>';
+        return;
+    }
+
+    container.innerHTML = data.map((user, index) => {
+        const rankClass = index === 0 ? 'rank gold' : 'rank';
+        const badge = getBadge(user.reputation || 0);
+        const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}`;
+        
+        return `
+            <div class="leaderboard-item">
+                <span class="${rankClass}">#${index + 1}</span>
+                <img src="${avatar}" alt="${user.full_name || 'User'}" />
+                <span class="leaderboard-name">${user.full_name || 'Anonymous'}</span>
+                <span class="leaderboard-badge">${badge}</span>
+                <span class="leaderboard-xp">${user.reputation || 0} XP</span>
+            </div>
+        `;
+    }).join('');
 }
 init();

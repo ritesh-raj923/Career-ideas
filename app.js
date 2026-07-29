@@ -1273,6 +1273,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupTabs() {
     const tabs = document.querySelectorAll('.tab-btn');
     const contents = {
+        home: document.getElementById('tab-home'),      // ⬅️ ADD THIS
         exams: document.getElementById('tab-exams'),
         leaderboard: document.getElementById('tab-leaderboard'),
         resources: document.getElementById('tab-resources')

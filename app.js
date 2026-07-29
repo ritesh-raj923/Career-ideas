@@ -1624,7 +1624,50 @@ async function loadSharedUrl(url) {
         alert('Failed to load URL. Please try again.');
     }
 }
+// ─── YOUTUBE SEARCH API ───
+const YOUTUBE_API_KEY = 'AIzaSyB7jLZgPJQbgOZfFEaHwBKgoyfWVr8yhBk'; // ⬅️ REPLACE WITH YOUR KEY
 
+async function searchYouTube(query) {
+    const container = document.getElementById('youtubeResults');
+    if (!query || !container) return;
+
+    container.innerHTML = '<span style="font-size:0.7rem; color:var(--text-muted);">🔍 Searching...</span>';
+
+    try {
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=6&q=${encodeURIComponent(query)}&type=video&key=${YOUTUBE_API_KEY}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.error) {
+            container.innerHTML = `<span style="font-size:0.7rem; color:var(--danger);">⚠️ API Error: ${data.error.message}. Check API key.</span>`;
+            return;
+        }
+
+        if (!data.items || data.items.length === 0) {
+            container.innerHTML = '<span style="font-size:0.7rem; color:var(--text-muted);">No videos found.</span>';
+            return;
+        }
+
+        container.innerHTML = data.items.map(item => `
+            <div onclick="playYouTubeVideo('${item.id.videoId}')" style="display:flex; align-items:center; gap:8px; padding:4px 8px; background:var(--bg-card); border-radius:6px; cursor:pointer; transition:var(--transition);">
+                <img src="${item.snippet.thumbnails.default.url}" style="width:40px; height:30px; object-fit:cover; border-radius:4px;" />
+                <div style="flex:1; font-size:0.7rem; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">${item.snippet.title}</div>
+                <button style="background:var(--gold); border:none; color:#0b0e1a; padding:2px 10px; border-radius:100px; font-size:0.6rem; font-weight:700; cursor:pointer;">▶ Play</button>
+            </div>
+        `).join('');
+    } catch (e) {
+        container.innerHTML = '<span style="font-size:0.7rem; color:var(--danger);">⚠️ Network error. Please try again.</span>';
+    }
+}
+
+function playYouTubeVideo(videoId) {
+    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
+    document.getElementById('sharedUrlInput').value = embedUrl;
+    loadSharedUrl(embedUrl);
+    // Clear the search results after playing
+    document.getElementById('youtubeResults').innerHTML = '';
+    document.getElementById('youtubeSearchInput').value = '';
+}
 // Listen for real-time changes in the pod
 function listenToPodChanges(roomId) {
     // URL changes
@@ -1897,21 +1940,36 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('sharedBrowser').style.display = view === 'browser' ? 'flex' : 'none';
             document.getElementById('whiteboardPanel').style.display = view === 'whiteboard' ? 'flex' : 'none';
             if (view === 'whiteboard') {
-    setTimeout(() => {
-        if (window.resizeWhiteboard) window.resizeWhiteboard();
-    }, 100);
-}
+                setTimeout(() => {
+                    if (window.resizeWhiteboard) window.resizeWhiteboard();
+                }, 100);
+            }
         });
     });
 
-// ─── POD MODE BUTTONS ───
-document.querySelectorAll('.pod-mode-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.pod-mode-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+    // ─── YOUTUBE SEARCH LISTENERS ───
+    document.getElementById('youtubeSearchBtn')?.addEventListener('click', () => {
+        const query = document.getElementById('youtubeSearchInput').value.trim();
+        if (query) searchYouTube(query);
     });
-});
-}); // ⬅️ ADD THIS LINE TO CLOSE THE DOMContentLoaded LISTENER
+
+    document.getElementById('youtubeSearchInput')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const query = document.getElementById('youtubeSearchInput').value.trim();
+            if (query) searchYouTube(query);
+        }
+    });
+
+    // ─── POD MODE BUTTONS ───
+    document.querySelectorAll('.pod-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.pod-mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+
+}); // ⬅️ Closes the DOMContentLoaded listener
+
 // ─── WHITEBOARD SETUP ───
 let currentTool = 'pen';
 let currentColor = '#f5c542';

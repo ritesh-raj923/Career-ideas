@@ -1002,7 +1002,8 @@ if (elements.resourceForm) {
         const examId = parseInt(elements.resourceExam.value);
         const link = elements.resourceLink.value.trim();
         const description = elements.resourceDesc.value.trim();
-        
+        const resourceType = document.getElementById('resourceType').value;
+const affiliateLink = document.getElementById('affiliateLink').value.trim();
         if (!title || !examId || !link) {
             alert('Please fill in all required fields.');
             return;
@@ -1019,6 +1020,8 @@ if (elements.resourceForm) {
                 link,
                 description,
                 user_id: currentUser.id
+                resource_type: resourceType,        // ⬅️ NEW
+                affiliate_link: affiliateLink || null  // ⬅️ NEW
             });
         
         elements.submitResourceBtn.disabled = false;

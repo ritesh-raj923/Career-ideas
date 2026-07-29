@@ -62,7 +62,8 @@
         </div>
     </nav>
 
-    <!-- ====== HERO SECTION ====== -->
+    <!-- ====== HOME TAB (HERO) ====== -->
+<div class="tab-content active" id="tab-home">
     <section class="hero" id="home">
         <div class="container hero-grid">
             <div class="hero-content">
@@ -107,23 +108,26 @@
             </div>
         </div>
     </section>
-    <!-- ====== TAB NAVIGATION ====== -->
+</div>
+
+<!-- ====== TAB NAVIGATION ====== -->
 <div class="tab-navigation">
     <div class="container">
-        <button class="tab-btn active" data-tab="exams">📚 Exams</button>
+        <button class="tab-btn active" data-tab="home">🏠 Home</button>
+        <button class="tab-btn" data-tab="exams">📚 Exams</button>
         <button class="tab-btn" data-tab="leaderboard">🏆 Leaderboard</button>
         <button class="tab-btn" data-tab="resources">📖 Resources</button>
     </div>
 </div>
- <!-- TAB 1: EXAMS -->
-<div class="tab-content active" id="tab-exams">
+
+<!-- ====== TAB 1: EXAMS ====== -->
+<div class="tab-content" id="tab-exams">
     <section class="exams-section" id="exams">
         <div class="container">
             <span class="section-label" data-i18n="examsLabel">📋 Categories</span>
             <h2 class="section-title" data-i18n="examsTitle">Browse by <span class="highlight">Exam</span></h2>
             <p class="section-desc" data-i18n="examsDesc">Select an exam to see all resources shared by the community.</p>
             
-            <!-- Sector Filters -->
             <div class="exam-sector-filters">
                 <button class="sector-filter-btn active" data-sector="all">All</button>
                 <button class="sector-filter-btn" data-sector="Foundation">🏫 Foundation</button>
@@ -142,7 +146,7 @@
     </section>
 </div>
 
-<!-- TAB 2: LEADERBOARD -->
+<!-- ====== TAB 2: LEADERBOARD ====== -->
 <div class="tab-content" id="tab-leaderboard">
     <section class="leaderboard-section" id="leaderboard">
         <div class="container">
@@ -161,7 +165,7 @@
     </section>
 </div>
 
-<!-- TAB 3: RESOURCES -->
+<!-- ====== TAB 3: RESOURCES ====== -->
 <div class="tab-content" id="tab-resources">
     <section class="resources-section" id="resources">
         <div class="container">

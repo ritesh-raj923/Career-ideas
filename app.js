@@ -395,6 +395,7 @@ async function loadExams() {
     
     // Define sector order for display
     const sectorOrder = [
+        'Skill Development',  // ⬅️ ADD THIS LINE
         'Foundation', 
         'Engineering', 
         'Medical', 
@@ -412,6 +413,7 @@ async function loadExams() {
         
         // Sector header
         const sectorIcons = {
+            'Skill Development': '🚀',  // ⬅️ ADD THIS LINE
             'Foundation': '🏫',
             'Engineering': '🔬',
             'Medical': '🩺',

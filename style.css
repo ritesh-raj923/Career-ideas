@@ -1625,3 +1625,21 @@ footer {
         flex-shrink: 0;
     }
 }
+/* ─── HOME TAB ─── */   ⬅️ PASTE THIS ENTIRE BLOCK HERE
+#tab-home .hero {
+    padding-top: 100px;
+    padding-bottom: 40px;
+    min-height: auto;
+}
+
+#tab-home .hero .hero-stats {
+    margin-top: 20px;
+    padding-top: 20px;
+}
+
+@media (max-width: 768px) {
+    #tab-home .hero {
+        padding-top: 80px;
+        padding-bottom: 20px;
+    }
+}

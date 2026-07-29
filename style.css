@@ -1643,3 +1643,13 @@ footer {
         padding-bottom: 20px;
     }
 }
+/* ─── TAB NAVIGATION (STICKY) ─── */
+.tab-navigation {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 4px 0;
+    position: sticky;
+    top: 68px; /* Height of navbar */
+    z-index: 999;
+    backdrop-filter: blur(8px);
+}

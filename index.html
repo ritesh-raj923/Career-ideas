@@ -210,6 +210,51 @@
     </section>
 </div>
 
+<!-- ====== TAB 4: STUDY PODS ====== -->
+<div class="tab-content" id="tab-pods">
+    <section class="pods-section">
+        <div class="container">
+            <span class="section-label">🤝 Study Together</span>
+            <h2 class="section-title">Find Your <span class="highlight">Study Pod</span></h2>
+            <p class="section-desc">Study with 2, 4, or 6 people who share the same interests. Or go solo with Focus Mode.</p>
+
+            <!-- Pod Creation Form -->
+            <div class="pod-creator">
+                <div class="pod-mode-selector">
+                    <button class="pod-mode-btn active" data-mode="1">🧑 Solo</button>
+                    <button class="pod-mode-btn" data-mode="2">👥 Duo</button>
+                    <button class="pod-mode-btn" data-mode="4">👨‍👩‍👦 Standard</button>
+                    <button class="pod-mode-btn" data-mode="6">👨‍👩‍👧‍👦 Large</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="podExam">Choose Exam</label>
+                    <select id="podExam">
+                        <option value="">Select an exam</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="podTopic">Topic / Chapter (Optional)</label>
+                    <input type="text" id="podTopic" placeholder="e.g., Electrostatics, Calculus, Thermodynamics..." />
+                </div>
+
+                <button id="startPodBtn" class="btn-primary">🚀 Start Pod</button>
+            </div>
+
+            <!-- Active Pods (Waiting Rooms) -->
+            <div class="active-pods">
+                <h3>🔄 Waiting Pods</h3>
+                <div id="waitingPodsContainer">
+                    <div class="loading-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading active pods...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
 
 <!-- ====== ADD RESOURCE MODAL ====== -->
 <div class="modal" id="addResourceModal">
@@ -347,7 +392,88 @@
             </form>
         </div>
     </div>
+   <!-- ====== POD ROOM (Full Screen - Hidden by default) ====== -->
+<div id="podRoom" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:9999; background:var(--bg-primary); flex-direction:column;">
+    
+    <!-- Header -->
+    <div class="pod-room-header" style="display:flex; justify-content:space-between; align-items:center; padding:10px 24px; background:var(--bg-secondary); border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0;">
+        <div style="display:flex; align-items:center; gap:16px;">
+            <span id="podRoomTitle" style="font-weight:700; font-size:1.1rem;">📚 Study Pod</span>
+            <span id="podPeopleCount" style="color:var(--text-muted); font-size:0.9rem;">👥 1/4</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:16px;">
+            <span id="podTimerDisplay" style="font-size:1.3rem; font-weight:700; color:var(--gold);">45:00</span>
+            <button id="leavePodBtn" class="btn-secondary" style="padding:6px 16px; font-size:0.8rem;">🚪 Leave</button>
+        </div>
+    </div>
 
+    <!-- Main Layout: Viewer (Left) + Sidebar (Right) -->
+    <div style="display:flex; flex:1; overflow:hidden;">
+        
+        <!-- LEFT: Viewer (Shared Browser + Whiteboard) -->
+        <div class="pod-room-viewer" style="flex:3; display:flex; flex-direction:column; background:var(--bg-card);">
+            
+            <!-- Tabs: Shared Browser | Whiteboard -->
+            <div class="viewer-tabs" style="display:flex; gap:4px; padding:8px 16px; background:var(--bg-secondary); border-bottom:1px solid rgba(255,255,255,0.04); flex-shrink:0;">
+                <button class="viewer-tab active" data-view="browser" style="background:transparent; border:none; color:var(--text-secondary); padding:6px 16px; border-radius:100px; cursor:pointer; font-weight:600; transition:var(--transition);">🌐 Shared Browser</button>
+                <button class="viewer-tab" data-view="whiteboard" style="background:transparent; border:none; color:var(--text-secondary); padding:6px 16px; border-radius:100px; cursor:pointer; font-weight:600; transition:var(--transition);">✏️ Whiteboard</button>
+            </div>
+
+            <!-- Viewer Content -->
+            <div class="viewer-content" style="flex:1; position:relative; overflow:hidden;">
+                
+                <!-- BROWSER PANEL -->
+                <div id="sharedBrowser" class="viewer-panel" style="display:flex; flex-direction:column; height:100%;">
+                    <!-- Controls -->
+                    <div class="browser-controls" style="display:flex; gap:8px; padding:8px 16px; background:rgba(0,0,0,0.2); flex-wrap:wrap; flex-shrink:0;">
+                        <input type="text" id="sharedUrlInput" placeholder="Paste any URL (YouTube, NCERT, Website)..." style="flex:1; min-width:150px; padding:8px 14px; border-radius:100px; border:1px solid rgba(255,255,255,0.06); background:var(--bg-primary); color:var(--text-primary); font-size:0.85rem;" />
+                        <button id="loadUrlBtn" class="btn-primary" style="padding:6px 20px; font-size:0.8rem;">🔗 Load</button>
+                    </div>
+                    
+                    <!-- Resource Picker (From App Contributions) -->
+                    <div class="resource-picker" style="padding:4px 16px; background:rgba(0,0,0,0.1); border-bottom:1px solid rgba(255,255,255,0.04); flex-shrink:0;">
+                        <span style="font-size:0.7rem; font-weight:600; color:var(--text-muted); text-transform:uppercase;">📚 Select from contributed resources:</span>
+                        <div id="podResourceList" style="display:flex; gap:8px; padding:6px 0; overflow-x:auto; flex-wrap:nowrap;">
+                            <!-- Dynamically loaded -->
+                        </div>
+                    </div>
+
+                    <!-- The Shared IFrame -->
+                    <iframe id="sharedIframe" src="about:blank" style="flex:1; width:100%; border:none; background:#fff;" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture;"></iframe>
+                </div>
+
+                <!-- WHITEBOARD PANEL (Hidden by default) -->
+                <div id="whiteboardPanel" class="viewer-panel" style="display:none; flex-direction:column; height:100%;">
+                    <canvas id="whiteboardCanvas" style="flex:1; width:100%; background:#fff; cursor:crosshair;"></canvas>
+                    <div class="whiteboard-tools" style="display:flex; gap:8px; padding:8px 16px; background:rgba(0,0,0,0.2); align-items:center; flex-shrink:0;">
+                        <button class="wb-tool active" data-tool="pen" style="background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-primary); padding:4px 12px; border-radius:6px; cursor:pointer;">✏️ Pen</button>
+                        <button class="wb-tool" data-tool="eraser" style="background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-primary); padding:4px 12px; border-radius:6px; cursor:pointer;">🧹 Eraser</button>
+                        <button class="wb-tool" data-tool="clear" style="background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-primary); padding:4px 12px; border-radius:6px; cursor:pointer;">🗑️ Clear</button>
+                        <input type="color" id="wbColor" value="#f5c542" style="width:30px; height:30px; border:none; border-radius:50%; background:transparent; cursor:pointer;" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Sidebar (Chat + Participants) -->
+        <div class="pod-room-sidebar" style="flex:1; min-width:200px; max-width:320px; background:var(--bg-secondary); display:flex; flex-direction:column; border-left:1px solid rgba(255,255,255,0.04);">
+            <!-- Participants -->
+            <div style="padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.04); flex-shrink:0;">
+                <h4 style="margin:0; font-size:0.9rem; font-weight:700;">👥 Participants</h4>
+                <div id="podParticipantsList" style="margin-top:8px; display:flex; flex-direction:column; gap:6px;"></div>
+            </div>
+            <!-- Chat -->
+            <div style="flex:1; display:flex; flex-direction:column; padding:12px 16px; overflow:hidden;">
+                <h4 style="margin:0; font-size:0.9rem; font-weight:700;">💬 Chat</h4>
+                <div id="podChatMessages" style="flex:1; overflow-y:auto; margin:8px 0; font-size:0.85rem; display:flex; flex-direction:column; gap:4px; min-height:80px;"></div>
+                <div style="display:flex; gap:8px; flex-shrink:0;">
+                    <input type="text" id="podChatInput" placeholder="Type a message..." style="flex:1; padding:6px 12px; border-radius:100px; border:1px solid rgba(255,255,255,0.06); background:var(--bg-primary); color:var(--text-primary); font-size:0.85rem;" />
+                    <button id="podChatSendBtn" class="btn-primary" style="padding:4px 14px; font-size:0.8rem;">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
     <!-- ====== FOOTER ====== -->
     <footer>
         <div class="container footer-inner">

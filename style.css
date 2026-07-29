@@ -1776,3 +1776,431 @@ footer {
     font-size: 0.75rem;
     color: var(--text-muted);
 }
+/* ──────────────────────────────────────────────
+   STUDY PODS (STYLES)
+   ────────────────────────────────────────────── */
+
+/* --- Pod Creator Section --- */
+.pods-section {
+    padding: 40px 0 60px 0;
+}
+
+.pod-creator {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 28px 30px;
+    margin: 30px 0 40px 0;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.pod-mode-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.pod-mode-btn {
+    background: var(--bg-primary);
+    border: 1.5px solid rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    padding: 10px 22px;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: inherit;
+    flex: 1 0 auto;
+}
+
+.pod-mode-btn:hover {
+    border-color: var(--border-gold);
+    color: var(--text-primary);
+    background: var(--bg-card-hover);
+}
+
+.pod-mode-btn.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #0b0e1a;
+    box-shadow: 0 4px 20px rgba(245, 197, 66, 0.25);
+    font-weight: 700;
+}
+
+#startPodBtn {
+    width: 100%;
+    justify-content: center;
+    margin-top: 8px;
+    padding: 14px;
+    font-size: 1.1rem;
+}
+
+/* --- Waiting Pods List --- */
+.active-pods {
+    margin-top: 30px;
+}
+
+.active-pods h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+}
+
+.waiting-pod-item {
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    transition: var(--transition);
+}
+
+.waiting-pod-item:hover {
+    border-color: var(--border-gold);
+    background: var(--bg-card-hover);
+}
+
+.waiting-pod-item .pod-code-badge {
+    font-size: 0.7rem;
+    background: var(--gold-dim);
+    padding: 2px 10px;
+    border-radius: 100px;
+    color: var(--gold);
+    font-weight: 600;
+    border: 1px solid var(--border-gold);
+}
+
+/* --- Pod Room (Full Screen UI) --- */
+#podRoom {
+    display: none; /* Hidden by default, shown by JS */
+}
+
+.pod-room-header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 10px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.pod-room-header #podRoomTitle {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.pod-room-header #podTimerDisplay {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+}
+
+/* --- Viewer Tabs (Browser / Whiteboard) --- */
+.viewer-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    flex-shrink: 0;
+}
+
+.viewer-tab {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 6px 16px;
+    border-radius: 100px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: var(--transition);
+    font-family: inherit;
+}
+
+.viewer-tab:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.viewer-tab.active {
+    color: var(--gold);
+    background: var(--gold-dim);
+}
+
+/* --- Browser Controls --- */
+.browser-controls {
+    display: flex;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.2);
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+#sharedUrlInput {
+    flex: 1;
+    min-width: 150px;
+    padding: 8px 14px;
+    border-radius: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-family: inherit;
+}
+
+#sharedUrlInput:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+/* --- Resource Picker (Inside Pod) --- */
+.resource-picker {
+    padding: 4px 16px;
+    background: rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    flex-shrink: 0;
+}
+
+#podResourceList {
+    display: flex;
+    gap: 8px;
+    padding: 6px 0;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: thin;
+}
+
+#podResourceList::-webkit-scrollbar {
+    height: 4px;
+}
+
+#podResourceList::-webkit-scrollbar-thumb {
+    background: var(--gold);
+    border-radius: 100px;
+}
+
+#podResourceList button {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    padding: 4px 14px;
+    border-radius: 100px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--transition);
+    font-family: inherit;
+}
+
+#podResourceList button:hover {
+    border-color: var(--border-gold);
+    color: var(--gold);
+    background: var(--bg-card-hover);
+}
+
+/* --- Whiteboard --- */
+.whiteboard-tools {
+    display: flex;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.2);
+    align-items: center;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.wb-tool {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: var(--transition);
+    font-family: inherit;
+}
+
+.wb-tool:hover {
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+}
+
+.wb-tool.active {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: var(--gold-dim);
+}
+
+#wbColor {
+    width: 30px;
+    height: 30px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+}
+
+#wbColor::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+#wbColor::-webkit-color-swatch {
+    border: none;
+    border-radius: 50%;
+}
+
+/* --- Sidebar (Chat & Participants) --- */
+.pod-room-sidebar {
+    flex: 1;
+    min-width: 200px;
+    max-width: 320px;
+    background: var(--bg-secondary);
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.pod-room-sidebar h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+}
+
+#podParticipantsList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#podParticipantsList > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background: var(--bg-card);
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+#podParticipantsList img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+#podChatMessages {
+    flex: 1;
+    overflow-y: auto;
+    margin: 8px 0;
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 80px;
+    max-height: 300px;
+}
+
+#podChatMessages > div {
+    padding: 4px 8px;
+    background: var(--bg-card);
+    border-radius: 4px;
+    word-break: break-word;
+}
+
+#podChatMessages strong {
+    color: var(--gold);
+}
+
+#podChatInput {
+    flex: 1;
+    padding: 6px 12px;
+    border-radius: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-family: inherit;
+}
+
+#podChatInput:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+#podChatSendBtn {
+    padding: 4px 14px;
+    font-size: 0.8rem;
+}
+
+/* --- Mobile Responsiveness for Pods --- */
+@media (max-width: 768px) {
+    .pod-room-sidebar {
+        min-width: 160px;
+        max-width: 240px;
+    }
+    
+    .pod-mode-btn {
+        flex: 1 1 45%;
+        justify-content: center;
+        font-size: 0.8rem;
+        padding: 8px 12px;
+    }
+    
+    .pod-creator {
+        padding: 20px 16px;
+    }
+    
+    .waiting-pod-item {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .pod-room-sidebar {
+        min-width: 120px;
+        max-width: 160px;
+    }
+    
+    .pod-room-sidebar h4 {
+        font-size: 0.7rem;
+    }
+    
+    #podParticipantsList > div {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+    }
+    
+    #podChatMessages {
+        font-size: 0.75rem;
+        min-height: 50px;
+        max-height: 150px;
+    }
+    
+    #podChatInput {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+    }
+    
+    .viewer-tab {
+        font-size: 0.7rem;
+        padding: 4px 10px;
+    }
+}

@@ -1231,3 +1231,124 @@ footer {
         width: 100%;
     }
 }
+/* ─── LEADERBOARD ─── */
+.leaderboard-wrapper {
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    margin-top: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.leaderboard-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.leaderboard-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.leaderboard-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 16px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    transition: var(--transition);
+}
+
+.leaderboard-item:hover {
+    border-color: var(--border-gold);
+    background: var(--bg-card-hover);
+}
+
+.leaderboard-item .rank {
+    font-size: 1.1rem;
+    font-weight: 800;
+    min-width: 36px;
+    color: var(--text-muted);
+}
+
+.leaderboard-item .rank.gold {
+    color: #ffd700;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.leaderboard-item .rank.silver {
+    color: #c0c0c0;
+}
+
+.leaderboard-item .rank.bronze {
+    color: #cd7f32;
+}
+
+.leaderboard-item img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.leaderboard-item .leaderboard-name {
+    flex: 1;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.leaderboard-item .leaderboard-xp {
+    font-size: 0.8rem;
+    color: var(--gold);
+    font-weight: 600;
+}
+
+.leaderboard-item .leaderboard-badge {
+    font-size: 1.2rem;
+}
+
+/* ─── LEADERBOARD RESPONSIVE ─── */
+@media (max-width: 768px) {
+    .leaderboard-wrapper {
+        padding: 18px 16px;
+        margin-top: 30px;
+    }
+    .leaderboard-title {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .leaderboard-wrapper {
+        padding: 14px 12px;
+        margin-top: 24px;
+    }
+    .leaderboard-item {
+        padding: 8px 12px;
+        gap: 10px;
+    }
+    .leaderboard-item .leaderboard-name {
+        font-size: 0.8rem;
+    }
+    .leaderboard-item .leaderboard-xp {
+        font-size: 0.7rem;
+    }
+    .leaderboard-item img {
+        width: 28px;
+        height: 28px;
+    }
+}

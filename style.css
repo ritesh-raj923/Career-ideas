@@ -1724,3 +1724,55 @@ footer {
     margin-top: 4px;
     opacity: 0.6;
 }
+/* ─── RECENT ACTIVITY ─── */
+.recent-activity {
+    background: var(--bg-secondary);
+    padding: 30px 0 50px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.recent-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+}
+
+.recent-resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.recent-resource-item {
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.recent-resource-item:hover {
+    border-color: var(--border-gold);
+    transform: translateY(-2px);
+}
+
+.recent-resource-item .recent-exam {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.recent-resource-item .recent-title-text {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin: 4px 0;
+}
+
+.recent-resource-item .recent-user {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}

@@ -1153,7 +1153,7 @@ async function loadLeaderboard() {
     // Only fetch users with reputation > 0, sorted descending, limit to 10
     const { data, error } = await supabaseClient
         .from('profiles')
-        .select('full_name, reputation, avatar_url, karma')
+        .select('full_name, reputation, avatar_url')
         .gt('reputation', 0)  // Database filter
         .order('reputation', { ascending: false })
         .limit(10);

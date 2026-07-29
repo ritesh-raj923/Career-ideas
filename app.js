@@ -1501,6 +1501,8 @@ async function enterPodRoom(roomId) {
 
     // Set room title
     document.getElementById('podRoomTitle').textContent = `📚 ${room.exams?.name || 'Study'} Pod`;
+    // Set participant count
+document.getElementById('podPeopleCount').textContent = `👥 1/${room.max_people || 4}`;
 
     // Load resources for this exam
     loadPodResources();
@@ -1662,11 +1664,19 @@ async function searchYouTube(query) {
 
 function playYouTubeVideo(videoId) {
     const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
-    document.getElementById('sharedUrlInput').value = embedUrl;
+    const input = document.getElementById('sharedUrlInput');
+    const iframe = document.getElementById('sharedIframe');
+    
+    if (input) input.value = embedUrl;
+    if (iframe) iframe.src = embedUrl;
+    
     loadSharedUrl(embedUrl);
+    
     // Clear the search results after playing
-    document.getElementById('youtubeResults').innerHTML = '';
-    document.getElementById('youtubeSearchInput').value = '';
+    const results = document.getElementById('youtubeResults');
+    if (results) results.innerHTML = '';
+    const searchInput = document.getElementById('youtubeSearchInput');
+    if (searchInput) searchInput.value = '';
 }
 // Listen for real-time changes in the pod
 function listenToPodChanges(roomId) {

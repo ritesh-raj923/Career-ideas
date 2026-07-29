@@ -1255,6 +1255,7 @@ async function init() {
     await loadLeaderboard();
     applyTranslations();
     setupSectorFilters();
+    setupTabs(); // ⬅️ ADD THIS LINE
 }
 
 // ─── LANGUAGE SWITCHER (must be called after DOM loads) ───
@@ -1268,6 +1269,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+// ─── TAB SWITCHER ───
+function setupTabs() {
+    const tabs = document.querySelectorAll('.tab-btn');
+    const contents = {
+        exams: document.getElementById('tab-exams'),
+        leaderboard: document.getElementById('tab-leaderboard'),
+        resources: document.getElementById('tab-resources')
+    };
 
+    if (!tabs.length) return;
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            // Update buttons
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            // Update content
+            const tabName = tab.dataset.tab;
+            Object.keys(contents).forEach(key => {
+                const content = contents[key];
+                if (content) {
+                    content.classList.toggle('active', key === tabName);
+                }
+            });
+
+            // Refresh resources if switching to resources tab
+            if (tabName === 'resources') {
+                loadResources(true);
+            }
+            // Refresh leaderboard if switching to leaderboard tab
+            if (tabName === 'leaderboard') {
+                loadLeaderboard();
+            }
+        });
+    });
+}
 // ─── START THE APP ───
 init();

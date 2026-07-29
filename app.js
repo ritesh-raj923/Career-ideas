@@ -1565,13 +1565,50 @@ async function loadResourceToPod(resourceId) {
 }
 
 // Load shared URL into iframe and broadcast to everyone
+// ─── LOAD SHARED URL (HANDLES ALL YOUTUBE FORMATS) ───
 async function loadSharedUrl(url) {
     if (!currentRoomId) return;
 
     let embedUrl = url;
-    if (url.includes('youtube.com/watch') || url.includes('youtu.be')) {
-        const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
-        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
+
+    try {
+        // 1. YouTube Watch URL (e.g., watch?v=VIDEO_ID)
+        if (url.includes('youtube.com/watch')) {
+            const urlObj = new URL(url);
+            const videoId = urlObj.searchParams.get('v');
+            if (videoId) {
+                embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
+            }
+        }
+        // 2. YouTube Shorts (e.g., youtube.com/shorts/VIDEO_ID)
+        else if (url.includes('youtube.com/shorts/')) {
+            const videoId = url.split('shorts/')[1]?.split('?')[0];
+            if (videoId) {
+                embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
+            }
+        }
+        // 3. YouTube Playlist (e.g., youtube.com/playlist?list=LIST_ID)
+        else if (url.includes('youtube.com/playlist')) {
+            const urlObj = new URL(url);
+            const listId = urlObj.searchParams.get('list');
+            if (listId) {
+                embedUrl = `https://www.youtube.com/embed/videoseries?list=${listId}&autoplay=1`;
+            }
+        }
+        // 4. YouTu.be Short Link (e.g., youtu.be/VIDEO_ID)
+        else if (url.includes('youtu.be/')) {
+            const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+            if (videoId) {
+                embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
+            }
+        }
+        // 5. YouTube Channel or User Page (CANNOT be embedded)
+        else if (url.includes('youtube.com/@') || url.includes('youtube.com/c/') || url.includes('youtube.com/user/') || url.includes('youtube.com/channel/')) {
+            alert('⚠️ YouTube Channel pages cannot be embedded. Please paste a specific VIDEO or PLAYLIST link instead.');
+            embedUrl = 'about:blank';
+        }
+    } catch (e) {
+        console.warn('URL parsing error, using original:', e);
     }
 
     const { error } = await supabaseClient
@@ -1582,7 +1619,10 @@ async function loadSharedUrl(url) {
         })
         .eq('id', currentRoomId);
 
-    if (error) console.error('Error loading shared URL:', error);
+    if (error) {
+        console.error('Error loading shared URL:', error);
+        alert('Failed to load URL. Please try again.');
+    }
 }
 
 // Listen for real-time changes in the pod
@@ -1664,8 +1704,14 @@ async function loadPodParticipants(roomId) {
         </div>
     `).join('');
 
-    // Update count
-    document.getElementById('podPeopleCount').textContent = `👥 ${data.length}/${data.length}`;
+    // Update count correctly (fetch max_people from room)
+const { data: roomData } = await supabaseClient
+    .from('study_rooms')
+    .select('max_people')
+    .eq('id', roomId)
+    .single();
+const maxPeople = roomData?.max_people || 4;
+document.getElementById('podPeopleCount').textContent = `👥 ${data.length}/${maxPeople}`;
 }
 
 // Send chat message
@@ -1850,94 +1896,118 @@ document.addEventListener('DOMContentLoaded', () => {
             const view = tab.dataset.view;
             document.getElementById('sharedBrowser').style.display = view === 'browser' ? 'flex' : 'none';
             document.getElementById('whiteboardPanel').style.display = view === 'whiteboard' ? 'flex' : 'none';
+            if (view === 'whiteboard') {
+    setTimeout(() => {
+        if (window.resizeWhiteboard) window.resizeWhiteboard();
+    }, 100);
+}
         });
     });
 
-    // Pod mode buttons (Solo, Duo, Standard, Large)
-    document.querySelectorAll('.pod-mode-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.pod-mode-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        });
+// ─── POD MODE BUTTONS ───
+document.querySelectorAll('.pod-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.pod-mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    });
+});
+
+// ─── WHITEBOARD SETUP ───
+let currentTool = 'pen';
+let currentColor = '#f5c542';
+let isDrawing = false;
+let lastX = 0, lastY = 0;
+
+const canvas = document.getElementById('whiteboardCanvas');
+if (canvas) {
+    const ctx = canvas.getContext('2d');
+
+    // ─── INITIAL STROKE SETTINGS ───
+    ctx.strokeStyle = currentColor;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';  // Added for smoother lines
+
+    // ─── RESIZE CANVAS (properly preserves white background) ───
+    function resizeCanvas() {
+        if (!canvas.parentElement) return;
+        const rect = canvas.parentElement.getBoundingClientRect();
+        // Set new size
+        canvas.width = rect.width - 4;
+        canvas.height = rect.height - 4;
+        // Redraw white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Restore stroke style after resize
+        ctx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : currentColor;
+        ctx.lineWidth = currentTool === 'eraser' ? 20 : 3;
+    }
+
+    // Initial resize
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Expose resize for tab switcher
+    window.resizeWhiteboard = resizeCanvas;
+
+    // ─── DRAWING EVENTS ───
+    canvas.addEventListener('mousedown', (e) => {
+        isDrawing = true;
+        const rect = canvas.getBoundingClientRect();
+        lastX = e.clientX - rect.left;
+        lastY = e.clientY - rect.top;
     });
 
-    // Whiteboard tools
-    let currentTool = 'pen';
-    let currentColor = '#f5c542';
-    let isDrawing = false;
-    let lastX = 0,
-        lastY = 0;
+    canvas.addEventListener('mousemove', (e) => {
+        if (!isDrawing) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
 
-    const canvas = document.getElementById('whiteboardCanvas');
-    if (canvas) {
-        const ctx = canvas.getContext('2d');
-        ctx.strokeStyle = currentColor;
-        ctx.lineWidth = 3;
-        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
 
-        function resizeCanvas() {
-            const rect = canvas.parentElement.getBoundingClientRect();
-            canvas.width = rect.width - 4;
-            canvas.height = rect.height - 4;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+        lastX = x;
+        lastY = y;
+    });
 
-        canvas.addEventListener('mousedown', (e) => {
-            isDrawing = true;
-            const rect = canvas.getBoundingClientRect();
-            lastX = e.clientX - rect.left;
-            lastY = e.clientY - rect.top;
-        });
+    canvas.addEventListener('mouseup', () => { isDrawing = false; });
+    canvas.addEventListener('mouseleave', () => { isDrawing = false; });
 
-        canvas.addEventListener('mousemove', (e) => {
-            if (!isDrawing) return;
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+    // ─── TOOL BUTTONS ───
+    document.querySelectorAll('.wb-tool').forEach(toolBtn => {
+        toolBtn.addEventListener('click', () => {
+            document.querySelectorAll('.wb-tool').forEach(t => t.classList.remove('active'));
+            toolBtn.classList.add('active');
+            currentTool = toolBtn.dataset.tool;
 
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-
-            lastX = x;
-            lastY = y;
-        });
-
-        canvas.addEventListener('mouseup', () => { isDrawing = false; });
-        canvas.addEventListener('mouseleave', () => { isDrawing = false; });
-
-        document.querySelectorAll('.wb-tool').forEach(toolBtn => {
-            toolBtn.addEventListener('click', () => {
-                document.querySelectorAll('.wb-tool').forEach(t => t.classList.remove('active'));
-                toolBtn.classList.add('active');
-                currentTool = toolBtn.dataset.tool;
-
-                if (currentTool === 'eraser') {
-                    ctx.strokeStyle = '#ffffff';
-                    ctx.lineWidth = 20;
-                } else if (currentTool === 'clear') {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    // Reset tool back to pen after clear
-                    document.querySelector('.wb-tool[data-tool="pen"]')?.click();
-                } else {
-                    ctx.strokeStyle = document.getElementById('wbColor').value;
-                    ctx.lineWidth = 3;
-                }
-            });
-        });
-
-        document.getElementById('wbColor')?.addEventListener('input', (e) => {
-            currentColor = e.target.value;
-            if (currentTool === 'pen') {
+            if (currentTool === 'eraser') {
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 20;
+            } else if (currentTool === 'clear') {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Reset to pen after clearing
+                const penBtn = document.querySelector('.wb-tool[data-tool="pen"]');
+                if (penBtn) penBtn.click();
+            } else {
                 ctx.strokeStyle = currentColor;
+                ctx.lineWidth = 3;
             }
         });
-    }
-});
+    });
+
+    // ─── COLOR PICKER ───
+    document.getElementById('wbColor')?.addEventListener('input', (e) => {
+        currentColor = e.target.value;
+        if (currentTool === 'pen') {
+            ctx.strokeStyle = currentColor;
+        }
+    });
+}   
 
 // ─── ADD TAB SWITCHER FOR PODS ───
 // Update the setupTabs function to include pods
@@ -1955,13 +2025,6 @@ setupTabs = function() {
     }
 };
 
-// ─── UPDATE INIT TO POPULATE POD EXAMS ───
-const originalInit = init;
-init = async function() {
-    await originalInit();
-    await populatePodExams();
-    await loadWaitingPods();
-};
 // ─── INIT ───
 async function init() {
     await checkAuth();
@@ -1971,6 +2034,8 @@ async function init() {
     await loadRecentResources();  // ⬅️ ALREADY ADDED
     await updateTabCounts();      // ⬅️ ADD THIS LINE
     await setSmartPlaceholder(); // ⬅️ DON'T FORGET TO ADD THIS LINE INSIDE init()
+    await populatePodExams();   // ⬅️ ADD THIS
+    await loadWaitingPods();    // ⬅️ ADD THIS
     applyTranslations();
     setupSectorFilters();
     setupTabs(); // ⬅️ ADD THIS LINE

@@ -1911,7 +1911,7 @@ document.querySelectorAll('.pod-mode-btn').forEach(btn => {
         btn.classList.add('active');
     });
 });
-
+}); // ⬅️ ADD THIS LINE TO CLOSE THE DOMContentLoaded LISTENER
 // ─── WHITEBOARD SETUP ───
 let currentTool = 'pen';
 let currentColor = '#f5c542';

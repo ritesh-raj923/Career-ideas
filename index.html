@@ -197,37 +197,65 @@
 </div>
 
 
-    <!-- ====== ADD RESOURCE MODAL ====== -->
-    <div class="modal" id="addResourceModal">
-        <div class="modal-content">
-            <span class="modal-close" id="closeModal">&times;</span>
-            <h2 data-i18n="shareTitle">✨ Share a Resource</h2>
-            <p class="modal-desc" data-i18n="shareDesc">Help fellow students by sharing useful study materials.</p>
-            <form id="resourceForm">
-                <div class="form-group">
-                    <label for="resourceTitle" data-i18n="formTitle">Title *</label>
-                    <input type="text" id="resourceTitle" data-i18n-placeholder="formPlaceholderTitle" placeholder="e.g., Best YouTube Playlist for JEE Physics" required />
-                </div>
-                <div class="form-group">
-                    <label for="resourceExam" data-i18n="formExam">Exam *</label>
-                    <select id="resourceExam" required>
-                        <option value="" data-i18n="filterAll">Select an exam</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="resourceLink" data-i18n="formLink">Resource Link *</label>
-                    <input type="url" id="resourceLink" data-i18n-placeholder="formPlaceholderLink" placeholder="https://youtube.com/playlist?list=..." required />
-                </div>
-                <div class="form-group">
-                    <label for="resourceDesc" data-i18n="formDesc">Description</label>
-                    <textarea id="resourceDesc" rows="3" data-i18n-placeholder="formPlaceholderDesc" placeholder="What's special about this resource? Any tips?"></textarea>
-                </div>
-                <button type="submit" class="btn-primary" id="submitResourceBtn" data-i18n="submitBtn">
-                    <i class="fas fa-upload"></i> Share Resource
-                </button>
-            </form>
-        </div>
+<!-- ====== ADD RESOURCE MODAL ====== -->
+<div class="modal" id="addResourceModal">
+    <div class="modal-content">
+        <span class="modal-close" id="closeModal">&times;</span>
+        <h2 data-i18n="shareTitle">✨ Share a Resource</h2>
+        <p class="modal-desc" data-i18n="shareDesc">Help fellow students by sharing useful study materials.</p>
+        <form id="resourceForm">
+            
+            <!-- Title -->
+            <div class="form-group">
+                <label for="resourceTitle" data-i18n="formTitle">Title *</label>
+                <input type="text" id="resourceTitle" data-i18n-placeholder="formPlaceholderTitle" placeholder="e.g., Best YouTube Playlist for JEE Physics" required />
+            </div>
+            
+            <!-- Exam -->
+            <div class="form-group">
+                <label for="resourceExam" data-i18n="formExam">Exam *</label>
+                <select id="resourceExam" required>
+                    <option value="" data-i18n="filterAll">Select an exam</option>
+                </select>
+            </div>
+            <!-- Resource Type: Web Link vs Mobile App -->
+<div class="form-group">
+    <label for="resourceType">Resource Type</label>
+    <select id="resourceType" required>
+        <option value="link">🔗 Web Link (YouTube/Website)</option>
+        <option value="app">📱 Mobile App (Play Store/App Store)</option>
+    </select>
+    <small style="color:var(--text-muted);font-size:0.7rem;display:block;margin-top:4px;">
+        Select "App" if you are sharing a download link from Play Store or App Store.
+    </small>
+</div>
+            
+            <!-- Resource Link -->
+            <div class="form-group">
+                <label for="resourceLink" data-i18n="formLink">Resource Link *</label>
+                <input type="url" id="resourceLink" data-i18n-placeholder="formPlaceholderLink" placeholder="https://youtube.com/playlist?list=... OR https://play.google.com/..." required />
+            </div>
+            
+            <!-- Description -->
+            <div class="form-group">
+                <label for="resourceDesc" data-i18n="formDesc">Description</label>
+                <textarea id="resourceDesc" rows="3" data-i18n-placeholder="formPlaceholderDesc" placeholder="What's special about this resource? Any tips?"></textarea>
+            </div>
+            <!-- Affiliate Link (Optional) -->
+<div class="form-group">
+    <label for="affiliateLink">📖 Book Purchase Link (Optional)</label>
+    <input type="url" id="affiliateLink" placeholder="https://amazon.in/dp/... OR https://flipkart.com/..." />
+    <small style="color:var(--text-muted);font-size:0.75rem;display:block;margin-top:4px;">
+        💰 Paste your Amazon/Flipkart affiliate link here. You get 100% of the commission!
+    </small>
+</div>
+            <!-- ✅ Submit Button -->
+            <button type="submit" class="btn-primary" id="submitResourceBtn" data-i18n="submitBtn">
+                <i class="fas fa-upload"></i> Share Resource
+            </button>
+        </form>
     </div>
+</div>
 
     <!-- ====== LOGIN MODAL ====== -->
     <div class="modal" id="loginModal">

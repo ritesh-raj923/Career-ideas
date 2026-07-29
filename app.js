@@ -1987,14 +1987,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-// ─── TAB SWITCHER ───
+// ─── TAB SWITCHER (FIXED FOR PODS) ───
 function setupTabs() {
     const tabs = document.querySelectorAll('.tab-btn');
     const contents = {
-        home: document.getElementById('tab-home'),      // ⬅️ ADD THIS
+        home: document.getElementById('tab-home'),
         exams: document.getElementById('tab-exams'),
         leaderboard: document.getElementById('tab-leaderboard'),
-        resources: document.getElementById('tab-resources')
+        resources: document.getElementById('tab-resources'),
+        pods: document.getElementById('tab-pods')  // ⬅️ THIS LINE WAS MISSING
     };
 
     if (!tabs.length) return;
@@ -2014,16 +2015,17 @@ function setupTabs() {
                 }
             });
 
-            // Refresh resources if switching to resources tab
-            if (tabName === 'resources') {
-                loadResources(true);
-            }
-            // Refresh leaderboard if switching to leaderboard tab
-            if (tabName === 'leaderboard') {
-                loadLeaderboard();
+            // Refresh content when switching tabs
+            if (tabName === 'resources') loadResources(true);
+            if (tabName === 'leaderboard') loadLeaderboard();
+            if (tabName === 'pods') {
+                // Load waiting pods and populate exam dropdown when clicking Pods tab
+                loadWaitingPods();
+                populatePodExams();
             }
         });
     });
 }
+
 // ─── START THE APP ───
 init();

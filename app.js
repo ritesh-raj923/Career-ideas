@@ -1270,6 +1270,19 @@ async function loadLeaderboard() {
         `;
     }).join('');
 }
+// ─── UPDATE TAB COUNTS ───
+async function updateTabCounts() {
+    // Count resources
+    const { count: resourceCount } = await supabaseClient
+        .from('resources')
+        .select('*', { count: 'exact', head: true });
+    
+    const examBtn = document.querySelector('[data-tab="exams"]');
+    const resourceBtn = document.querySelector('[data-tab="resources"]');
+    
+    if (examBtn) examBtn.textContent = `📚 Exams (${resourceCount || 0})`;
+    if (resourceBtn) resourceBtn.textContent = `📖 Resources (${resourceCount || 0})`;
+}
 // ─── SMART SEARCH PLACEHOLDER ───
 async function setSmartPlaceholder() {
     const input = document.getElementById('searchInput');
@@ -1295,6 +1308,8 @@ async function init() {
     await loadExams();
     await loadResources(true);
     await loadLeaderboard();
+    await loadRecentResources();  // ⬅️ ALREADY ADDED
+    await updateTabCounts();      // ⬅️ ADD THIS LINE
     await setSmartPlaceholder(); // ⬅️ DON'T FORGET TO ADD THIS LINE INSIDE init()
     applyTranslations();
     setupSectorFilters();
